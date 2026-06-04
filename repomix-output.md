@@ -1,0 +1,3767 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+The content has been processed where security check has been disabled.
+
+# File Summary
+
+## Purpose
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+
+## File Format
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  a. A header with the file path (## File: path/to/file)
+  b. The full contents of the file in a code block
+
+## Usage Guidelines
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+
+## Notes
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Security check has been disabled - content may contain sensitive information
+- Files are sorted by Git change count (files with more changes are at the bottom)
+
+# Directory Structure
+```
+.env.example
+.gitignore
+backend/__init__.py
+backend/app/__init__.py
+backend/app/config.py
+backend/app/main.py
+backend/app/models/__init__.py
+backend/app/models/schemas.py
+backend/app/routers/__init__.py
+backend/app/routers/drivers.py
+backend/app/routers/rally.py
+backend/app/routers/stages.py
+backend/app/services/__init__.py
+backend/app/services/analytics.py
+backend/app/services/data_loader.py
+backend/tests/__init__.py
+backend/tests/test_api.py
+backend/tests/test_health.py
+backend/tests/test_ingestion.py
+conftest.py
+dashboard/app.py
+dashboard/components/api_client.py
+dashboard/components/charts.py
+dashboard/pages/01_stages.py
+dashboard/pages/02_evolution.py
+dashboard/pages/03_compare.py
+data/processed/.gitkeep
+data/raw/.gitkeep
+docs/bloque-00-setup.md
+docs/bloque-01-ingesta.md
+docs/bloque-02-backend.md
+docs/bloque-03-dashboard.md
+ingestion/__init__.py
+ingestion/mock_data.py
+ingestion/pipeline.py
+ingestion/transformers.py
+ingestion/wrc_client.py
+Makefile
+pytest.ini
+README.md
+requirements.txt
+```
+
+# Files
+
+## File: .env.example
+````
+# Copy this file to .env and fill in the values
+# cp .env.example .env
+
+# API
+API_HOST=0.0.0.0
+API_PORT=8000
+API_RELOAD=true
+
+# Dashboard
+DASHBOARD_API_URL=http://localhost:8000
+
+# Data paths (relative to project root)
+DATA_RAW_PATH=data/raw
+DATA_PROCESSED_PATH=data/processed
+
+# WRC Data source
+# true  → usa datos mock locales (desarrollo sin internet / red corporativa)
+# false → llama a la API real de api.wrc.com
+WRC_USE_MOCK=true
+````
+
+## File: .gitignore
+````
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environment
+venv/
+.venv/
+env/
+
+# Environment variables
+.env
+.env.local
+
+# Data (raw and processed data not committed — too large / regenerable)
+data/raw/*.json
+data/raw/*.csv
+data/processed/*.csv
+data/processed/*.parquet
+
+# Keep the .gitkeep placeholders
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# IDE
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Pytest
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Streamlit
+.streamlit/secrets.toml
+````
+
+## File: backend/__init__.py
+````python
+
+````
+
+## File: backend/app/__init__.py
+````python
+
+````
+
+## File: backend/app/config.py
+````python
+"""Application configuration loaded from environment variables."""
+
+from pathlib import Path
+from pydantic_settings import BaseSettings  # pydantic v2
+
+
+class Settings(BaseSettings):
+    # API server
+    api_host: str = "0.0.0.0"
+    api_port: int = 8000
+    api_reload: bool = True
+
+    # Dashboard
+    dashboard_api_url: str = "http://localhost:8000"
+
+    # Paths (resolved relative to project root)
+    data_raw_path: str = "data/raw"
+    data_processed_path: str = "data/processed"
+
+    @property
+    def project_root(self) -> Path:
+        """Absolute path to the project root (two levels up from this file)."""
+        return Path(__file__).resolve().parents[2]
+
+    @property
+    def raw_dir(self) -> Path:
+        return self.project_root / self.data_raw_path
+
+    @property
+    def processed_dir(self) -> Path:
+        return self.project_root / self.data_processed_path
+
+    model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
+
+
+settings = Settings()
+````
+
+## File: backend/app/main.py
+````python
+"""Rally Performance Analyzer — FastAPI application entry point."""
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from backend.app.routers import rally, stages, drivers
+
+app = FastAPI(
+    title="Rally Performance Analyzer",
+    description="API para analizar datos del World Rally Championship.",
+    version="0.2.0",
+    docs_url="/docs",
+    redoc_url="/redoc",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# ── Routers ───────────────────────────────────────────────────────────────────
+app.include_router(rally.router)
+app.include_router(stages.router)
+app.include_router(drivers.router)
+
+
+@app.get("/health", tags=["Status"])
+def health_check() -> dict:
+    """Endpoint de salud — confirma que la API está en marcha."""
+    return {"status": "ok", "service": "rally-performance-analyzer"}
+````
+
+## File: backend/app/models/__init__.py
+````python
+
+````
+
+## File: backend/app/models/schemas.py
+````python
+"""
+Modelos Pydantic — esquemas de validación y serialización de la API.
+
+Cada schema representa la estructura de datos que devuelven los endpoints.
+"""
+
+from __future__ import annotations
+
+from pydantic import BaseModel, Field
+
+
+# ── Eventos ───────────────────────────────────────────────────────────────────
+
+class EventSummary(BaseModel):
+    """Resumen de un evento/rally."""
+    event_id: int
+    name: str
+    status: str
+    country: str
+    country_iso: str
+    date_start: str
+    date_finish: str
+
+
+# ── Etapas ────────────────────────────────────────────────────────────────────
+
+class Stage(BaseModel):
+    """Información de una etapa."""
+    stage_id: int
+    stage_code: str
+    name: str
+    distance_km: float
+    surface: str
+    leg_name: str
+    status: str
+
+
+# ── Pilotos ───────────────────────────────────────────────────────────────────
+
+class Driver(BaseModel):
+    """Información de un piloto inscrito."""
+    entry_id: int
+    driver_name: str
+    driver_code: str
+    driver_nationality: str
+    codriver_name: str
+    manufacturer: str
+    car_number: str
+    group: str
+
+
+# ── Tiempos de etapa ──────────────────────────────────────────────────────────
+
+class StageTimeEntry(BaseModel):
+    """Tiempo de un piloto en una etapa concreta."""
+    entry_id: int
+    position: int
+    time_s: float | None = None
+    time_str: str | None = None
+    diff_first_s: float | None = None
+    diff_prev_s: float | None = None
+    status: str
+    # Enriquecido con datos del piloto
+    driver_name: str = ""
+    driver_code: str = ""
+    manufacturer: str = ""
+    car_number: str = ""
+
+
+class StageResult(BaseModel):
+    """Resultado completo de una etapa."""
+    event_id: int
+    stage_id: int
+    stage_code: str
+    entries: list[StageTimeEntry]
+
+
+# ── Clasificación general ─────────────────────────────────────────────────────
+
+class OverallEntry(BaseModel):
+    """Posición de un piloto en la clasificación general."""
+    entry_id: int
+    position: int
+    total_time_s: float | None = None
+    total_time_str: str | None = None
+    diff_first_s: float | None = None
+    # Enriquecido
+    driver_name: str = ""
+    driver_code: str = ""
+    manufacturer: str = ""
+    car_number: str = ""
+
+
+class OverallClassification(BaseModel):
+    """Clasificación general tras una etapa."""
+    event_id: int
+    stage_id: int
+    stage_code: str
+    entries: list[OverallEntry]
+
+
+# ── Comparativa entre pilotos ─────────────────────────────────────────────────
+
+class DriverStageTime(BaseModel):
+    """Tiempo de un piloto en una etapa para comparativa."""
+    stage_code: str
+    position: int
+    time_s: float | None = None
+    diff_first_s: float | None = None
+
+
+class DriverComparison(BaseModel):
+    """Comparativa de dos pilotos a lo largo del rally."""
+    event_id: int
+    driver_a: Driver
+    driver_b: Driver
+    stage_times_a: list[DriverStageTime]
+    stage_times_b: list[DriverStageTime]
+
+
+# ── Evolución de posiciones ───────────────────────────────────────────────────
+
+class PositionAtStage(BaseModel):
+    """Posición de un piloto tras cada etapa."""
+    stage_code: str
+    stage_id: int
+    position: int
+    total_time_s: float | None = None
+    diff_first_s: float | None = None
+
+
+class DriverEvolution(BaseModel):
+    """Evolución de posición de un piloto a lo largo del rally."""
+    entry_id: int
+    driver_name: str
+    driver_code: str
+    manufacturer: str
+    positions: list[PositionAtStage]
+````
+
+## File: backend/app/routers/__init__.py
+````python
+
+````
+
+## File: backend/app/routers/drivers.py
+````python
+"""Router de pilotos — clasificación, evolución y comparativa."""
+
+from __future__ import annotations
+
+from fastapi import APIRouter, HTTPException, Query
+
+from backend.app.models.schemas import (
+    Driver,
+    DriverComparison,
+    DriverEvolution,
+    DriverStageTime,
+    OverallClassification,
+    OverallEntry,
+    PositionAtStage,
+)
+from backend.app.services import analytics, data_loader as loader
+from backend.app.routers.stages import _isnan
+
+router = APIRouter(prefix="/drivers", tags=["Drivers"])
+
+
+@router.get("/", response_model=list[Driver])
+def list_drivers() -> list[Driver]:
+    """Devuelve todos los pilotos inscritos en el rally."""
+    df = loader.get_entries()
+    if df.empty:
+        return []
+    return [
+        Driver(
+            entry_id=int(row["entry_id"]),
+            driver_name=str(row["driver_name"]),
+            driver_code=str(row.get("driver_code", "")),
+            driver_nationality=str(row.get("driver_nationality", "")),
+            codriver_name=str(row.get("codriver_name", "")),
+            manufacturer=str(row.get("manufacturer", "")),
+            car_number=str(row.get("car_number", "")),
+            group=str(row.get("group", "")),
+        )
+        for _, row in df.iterrows()
+    ]
+
+
+@router.get("/classification", response_model=OverallClassification)
+def get_final_classification() -> OverallClassification:
+    """Devuelve la clasificación general final del rally."""
+    df = analytics.get_final_classification()
+    if df.empty:
+        raise HTTPException(status_code=404, detail="No hay datos de clasificación")
+
+    stages_df = loader.get_stages()
+    last_stage_id = int(df.iloc[0]["stage_id"])
+    stage_row = stages_df[stages_df["stage_id"] == last_stage_id]
+    stage_code = str(stage_row.iloc[0]["stage_code"]) if not stage_row.empty else ""
+
+    entries = [
+        OverallEntry(
+            entry_id=int(row["entry_id"]),
+            position=int(row["position"]),
+            total_time_s=float(row["total_time_s"]) if not _isnan(row.get("total_time_s")) else None,
+            total_time_str=str(row.get("total_time_str", "")) or None,
+            diff_first_s=float(row["diff_first_s"]) if not _isnan(row.get("diff_first_s")) else None,
+            driver_name=str(row.get("driver_name", "")),
+            driver_code=str(row.get("driver_code", "")),
+            manufacturer=str(row.get("manufacturer", "")),
+            car_number=str(row.get("car_number", "")),
+        )
+        for _, row in df.iterrows()
+    ]
+
+    return OverallClassification(
+        event_id=int(df.iloc[0]["event_id"]),
+        stage_id=last_stage_id,
+        stage_code=stage_code,
+        entries=entries,
+    )
+
+
+@router.get("/evolution", response_model=list[DriverEvolution])
+def get_all_evolution() -> list[DriverEvolution]:
+    """Devuelve la evolución de posición de todos los pilotos (bump chart)."""
+    df = analytics.get_all_drivers_evolution()
+    if df.empty:
+        return []
+
+    result = []
+    for entry_id, group in df.groupby("entry_id"):
+        row0 = group.iloc[0]
+        positions = [
+            PositionAtStage(
+                stage_code=str(r.get("stage_code", "")),
+                stage_id=int(r["stage_id"]),
+                position=int(r["position"]),
+                total_time_s=float(r["total_time_s"]) if not _isnan(r.get("total_time_s")) else None,
+                diff_first_s=float(r["diff_first_s"]) if not _isnan(r.get("diff_first_s")) else None,
+            )
+            for _, r in group.iterrows()
+        ]
+        result.append(DriverEvolution(
+            entry_id=int(entry_id),
+            driver_name=str(row0.get("driver_name", "")),
+            driver_code=str(row0.get("driver_code", "")),
+            manufacturer=str(row0.get("manufacturer", "")),
+            positions=positions,
+        ))
+
+    return result
+
+
+@router.get("/compare", response_model=DriverComparison)
+def compare_drivers(
+    entry_a: int = Query(..., description="entry_id del piloto A"),
+    entry_b: int = Query(..., description="entry_id del piloto B"),
+) -> DriverComparison:
+    """Compara los tiempos por etapa de dos pilotos."""
+    entries_df = loader.get_entries()
+
+    def _get_driver(entry_id: int) -> Driver:
+        row = entries_df[entries_df["entry_id"] == entry_id]
+        if row.empty:
+            raise HTTPException(status_code=404, detail=f"Piloto {entry_id} no encontrado")
+        r = row.iloc[0]
+        return Driver(
+            entry_id=int(r["entry_id"]),
+            driver_name=str(r["driver_name"]),
+            driver_code=str(r.get("driver_code", "")),
+            driver_nationality=str(r.get("driver_nationality", "")),
+            codriver_name=str(r.get("codriver_name", "")),
+            manufacturer=str(r.get("manufacturer", "")),
+            car_number=str(r.get("car_number", "")),
+            group=str(r.get("group", "")),
+        )
+
+    driver_a = _get_driver(entry_a)
+    driver_b = _get_driver(entry_b)
+
+    data = analytics.get_driver_comparison(entry_a, entry_b)
+
+    def _to_stage_times(df) -> list[DriverStageTime]:
+        return [
+            DriverStageTime(
+                stage_code=str(r.get("stage_code", "")),
+                position=int(r["position"]),
+                time_s=float(r["time_s"]) if not _isnan(r.get("time_s")) else None,
+                diff_first_s=float(r["diff_first_s"]) if not _isnan(r.get("diff_first_s")) else None,
+            )
+            for _, r in df.iterrows()
+        ]
+
+    return DriverComparison(
+        event_id=1,
+        driver_a=driver_a,
+        driver_b=driver_b,
+        stage_times_a=_to_stage_times(data["driver_a"]),
+        stage_times_b=_to_stage_times(data["driver_b"]),
+    )
+````
+
+## File: backend/app/routers/rally.py
+````python
+"""Router de rally — endpoints de eventos y información general."""
+
+from __future__ import annotations
+
+from fastapi import APIRouter, HTTPException
+
+from backend.app.models.schemas import EventSummary
+from backend.app.services import data_loader as loader
+
+router = APIRouter(prefix="/rallies", tags=["Rallies"])
+
+
+@router.get("/", response_model=list[EventSummary])
+def list_rallies() -> list[EventSummary]:
+    """Devuelve todos los rallies de la temporada activa."""
+    df = loader.get_events()
+    if df.empty:
+        return []
+    return [
+        EventSummary(
+            event_id=int(row["event_id"]),
+            name=str(row["name"]),
+            status=str(row["status"]),
+            country=str(row["country"]),
+            country_iso=str(row.get("country_iso", "")),
+            date_start=str(row.get("date_start", "")),
+            date_finish=str(row.get("date_finish", "")),
+        )
+        for _, row in df.iterrows()
+    ]
+
+
+@router.get("/{event_id}", response_model=EventSummary)
+def get_rally(event_id: int) -> EventSummary:
+    """Devuelve la información de un rally concreto."""
+    df = loader.get_events()
+    row = df[df["event_id"] == event_id]
+    if row.empty:
+        raise HTTPException(status_code=404, detail=f"Rally {event_id} no encontrado")
+    r = row.iloc[0]
+    return EventSummary(
+        event_id=int(r["event_id"]),
+        name=str(r["name"]),
+        status=str(r["status"]),
+        country=str(r["country"]),
+        country_iso=str(r.get("country_iso", "")),
+        date_start=str(r.get("date_start", "")),
+        date_finish=str(r.get("date_finish", "")),
+    )
+````
+
+## File: backend/app/routers/stages.py
+````python
+"""Router de etapas — endpoints de etapas y tiempos."""
+
+from __future__ import annotations
+
+from fastapi import APIRouter, HTTPException
+
+from backend.app.models.schemas import Stage, StageResult, StageTimeEntry
+from backend.app.services import analytics, data_loader as loader
+
+router = APIRouter(prefix="/stages", tags=["Stages"])
+
+
+@router.get("/", response_model=list[Stage])
+def list_stages() -> list[Stage]:
+    """Devuelve todas las etapas del rally."""
+    df = loader.get_stages()
+    if df.empty:
+        return []
+    return [
+        Stage(
+            stage_id=int(row["stage_id"]),
+            stage_code=str(row["stage_code"]),
+            name=str(row["name"]),
+            distance_km=float(row["distance_km"]),
+            surface=str(row["surface"]),
+            leg_name=str(row.get("leg_name", "")),
+            status=str(row.get("status", "")),
+        )
+        for _, row in df.iterrows()
+    ]
+
+
+@router.get("/{stage_id}/times", response_model=StageResult)
+def get_stage_times(stage_id: int) -> StageResult:
+    """Devuelve los tiempos de todos los pilotos en una etapa concreta."""
+    stages_df = loader.get_stages()
+    stage_row = stages_df[stages_df["stage_id"] == stage_id]
+    if stage_row.empty:
+        raise HTTPException(status_code=404, detail=f"Etapa {stage_id} no encontrada")
+
+    stage_code = str(stage_row.iloc[0]["stage_code"])
+    df = analytics.get_stage_result(stage_id)
+
+    entries = [
+        StageTimeEntry(
+            entry_id=int(row["entry_id"]),
+            position=int(row["position"]),
+            time_s=float(row["time_s"]) if not _isnan(row.get("time_s")) else None,
+            time_str=str(row["time_str"]) if row.get("time_str") else None,
+            diff_first_s=float(row["diff_first_s"]) if not _isnan(row.get("diff_first_s")) else None,
+            diff_prev_s=float(row["diff_prev_s"]) if not _isnan(row.get("diff_prev_s")) else None,
+            status=str(row.get("status", "")),
+            driver_name=str(row.get("driver_name", "")),
+            driver_code=str(row.get("driver_code", "")),
+            manufacturer=str(row.get("manufacturer", "")),
+            car_number=str(row.get("car_number", "")),
+        )
+        for _, row in df.iterrows()
+    ]
+
+    return StageResult(
+        event_id=int(df.iloc[0]["event_id"]) if not df.empty else 0,
+        stage_id=stage_id,
+        stage_code=stage_code,
+        entries=entries,
+    )
+
+
+def _isnan(val) -> bool:
+    """Comprueba si un valor es NaN de forma segura."""
+    try:
+        import math
+        return math.isnan(float(val))
+    except (TypeError, ValueError):
+        return val is None
+````
+
+## File: backend/app/services/__init__.py
+````python
+
+````
+
+## File: backend/app/services/analytics.py
+````python
+"""
+Servicio de analítica.
+
+Funciones de cálculo y transformación sobre los DataFrames cargados.
+Separa la lógica de negocio de los routers.
+"""
+
+from __future__ import annotations
+
+import logging
+
+import pandas as pd
+
+from backend.app.services import data_loader as loader
+
+logger = logging.getLogger(__name__)
+
+
+def get_stage_result(stage_id: int) -> pd.DataFrame:
+    """
+    Devuelve los tiempos enriquecidos de una etapa concreta, ordenados por posición.
+    """
+    df = loader.get_stage_times_enriched()
+    if df.empty:
+        return df
+    result = df[df["stage_id"] == stage_id].sort_values("position")
+    return result.reset_index(drop=True)
+
+
+def get_overall_at_stage(stage_id: int) -> pd.DataFrame:
+    """
+    Devuelve la clasificación general enriquecida tras una etapa concreta.
+    """
+    df = loader.get_overall_enriched()
+    if df.empty:
+        return df
+    result = df[df["stage_id"] == stage_id].sort_values("position")
+    return result.reset_index(drop=True)
+
+
+def get_final_classification() -> pd.DataFrame:
+    """
+    Devuelve la clasificación final del rally (tras la última etapa).
+    """
+    df = loader.get_overall_enriched()
+    if df.empty:
+        return df
+    last_stage = df["stage_id"].max()
+    return get_overall_at_stage(last_stage)
+
+
+def get_driver_evolution(entry_id: int) -> pd.DataFrame:
+    """
+    Devuelve la evolución de posición de un piloto etapa a etapa.
+    """
+    df = loader.get_overall_enriched()
+    if df.empty:
+        return df
+    stages = loader.get_stages()[["stage_id", "stage_code"]].copy()
+    result = df[df["entry_id"] == entry_id].copy()
+    result = result.merge(stages, on="stage_id", how="left")
+    return result.sort_values("stage_id").reset_index(drop=True)
+
+
+def get_all_drivers_evolution() -> pd.DataFrame:
+    """
+    Devuelve la evolución de posición de todos los pilotos (para el bump chart).
+    """
+    df = loader.get_overall_enriched()
+    if df.empty:
+        return df
+    stages = loader.get_stages()[["stage_id", "stage_code"]].copy()
+    result = df.merge(stages, on="stage_id", how="left")
+    return result.sort_values(["entry_id", "stage_id"]).reset_index(drop=True)
+
+
+def get_driver_comparison(entry_id_a: int, entry_id_b: int) -> dict:
+    """
+    Devuelve los tiempos por etapa de dos pilotos para comparativa.
+    """
+    times = loader.get_stage_times_enriched()
+    stages = loader.get_stages()[["stage_id", "stage_code"]]
+
+    def _get_driver_times(entry_id: int) -> pd.DataFrame:
+        df = times[times["entry_id"] == entry_id].copy()
+        df = df.merge(stages, on="stage_id", how="left")
+        return df.sort_values("stage_id").reset_index(drop=True)
+
+    return {
+        "driver_a": _get_driver_times(entry_id_a),
+        "driver_b": _get_driver_times(entry_id_b),
+    }
+````
+
+## File: backend/app/services/data_loader.py
+````python
+"""
+Servicio de carga de datos.
+
+Carga los CSVs procesados como DataFrames de Pandas y los cachea en memoria.
+Se inicializa una sola vez al arrancar la API.
+"""
+
+from __future__ import annotations
+
+import logging
+from functools import lru_cache
+from pathlib import Path
+
+import pandas as pd
+
+logger = logging.getLogger(__name__)
+
+# ── Paths ─────────────────────────────────────────────────────────────────────
+_PROJECT_ROOT = Path(__file__).resolve().parents[3]
+_PROCESSED_DIR = _PROJECT_ROOT / "data" / "processed"
+
+# Prefijo del evento principal (Monte Carlo)
+_EVENT_PREFIX = "rallye_automobile_monte_carlo"
+
+
+def _load_csv(filename: str) -> pd.DataFrame:
+    """Carga un CSV desde data/processed/ con manejo de errores."""
+    path = _PROCESSED_DIR / filename
+    if not path.exists():
+        logger.warning("CSV no encontrado: %s — devolviendo DataFrame vacío", filename)
+        return pd.DataFrame()
+    df = pd.read_csv(path)
+    logger.info("CSV cargado: %s (%d filas)", filename, len(df))
+    return df
+
+
+# ── Carga de datos ────────────────────────────────────────────────────────────
+
+@lru_cache(maxsize=1)
+def get_events() -> pd.DataFrame:
+    """Devuelve los eventos de la temporada."""
+    return _load_csv("events.csv")
+
+
+@lru_cache(maxsize=1)
+def get_stages() -> pd.DataFrame:
+    """Devuelve las etapas del rally principal."""
+    return _load_csv(f"{_EVENT_PREFIX}_stages.csv")
+
+
+@lru_cache(maxsize=1)
+def get_entries() -> pd.DataFrame:
+    """Devuelve los pilotos inscritos."""
+    return _load_csv(f"{_EVENT_PREFIX}_entries.csv")
+
+
+@lru_cache(maxsize=1)
+def get_stage_times() -> pd.DataFrame:
+    """Devuelve todos los tiempos de etapa."""
+    return _load_csv(f"{_EVENT_PREFIX}_stage_times.csv")
+
+
+@lru_cache(maxsize=1)
+def get_overall() -> pd.DataFrame:
+    """Devuelve la clasificación general acumulada."""
+    return _load_csv(f"{_EVENT_PREFIX}_overall.csv")
+
+
+def get_stage_times_enriched() -> pd.DataFrame:
+    """
+    Devuelve tiempos de etapa enriquecidos con datos del piloto.
+
+    Join entre stage_times y entries por entry_id.
+    """
+    times = get_stage_times().copy()
+    entries = get_entries()[
+        ["entry_id", "driver_name", "driver_code", "manufacturer", "car_number"]
+    ]
+    if times.empty or entries.empty:
+        return times
+    return times.merge(entries, on="entry_id", how="left")
+
+
+def get_overall_enriched() -> pd.DataFrame:
+    """
+    Devuelve clasificación general enriquecida con datos del piloto.
+    """
+    overall = get_overall().copy()
+    entries = get_entries()[
+        ["entry_id", "driver_name", "driver_code", "manufacturer", "car_number"]
+    ]
+    if overall.empty or entries.empty:
+        return overall
+    return overall.merge(entries, on="entry_id", how="left")
+
+
+def clear_cache() -> None:
+    """Limpia la caché (útil para tests o recarga de datos)."""
+    get_events.cache_clear()
+    get_stages.cache_clear()
+    get_entries.cache_clear()
+    get_stage_times.cache_clear()
+    get_overall.cache_clear()
+    logger.info("Caché de datos limpiada")
+````
+
+## File: backend/tests/__init__.py
+````python
+
+````
+
+## File: backend/tests/test_api.py
+````python
+"""
+Tests del Bloque 2 — Endpoints FastAPI.
+
+Usa TestClient con datos reales de los CSVs generados en el Bloque 1.
+"""
+
+from __future__ import annotations
+
+import pytest
+from fastapi.testclient import TestClient
+
+from backend.app.main import app
+from backend.app.services.data_loader import clear_cache
+
+client = TestClient(app)
+
+
+@pytest.fixture(autouse=True)
+def reset_cache():
+    """Limpia la caché antes de cada test para evitar contaminación."""
+    clear_cache()
+    yield
+    clear_cache()
+
+
+# ── /health ───────────────────────────────────────────────────────────────────
+
+def test_health():
+    r = client.get("/health")
+    assert r.status_code == 200
+    assert r.json()["status"] == "ok"
+
+
+# ── /rallies ──────────────────────────────────────────────────────────────────
+
+def test_list_rallies_status():
+    r = client.get("/rallies/")
+    assert r.status_code == 200
+
+def test_list_rallies_returns_list():
+    r = client.get("/rallies/")
+    assert isinstance(r.json(), list)
+
+def test_list_rallies_not_empty():
+    r = client.get("/rallies/")
+    assert len(r.json()) > 0
+
+def test_get_rally_by_id():
+    r = client.get("/rallies/1")
+    assert r.status_code == 200
+    data = r.json()
+    assert data["event_id"] == 1
+    assert "name" in data
+
+def test_get_rally_not_found():
+    r = client.get("/rallies/9999")
+    assert r.status_code == 404
+
+def test_rally_has_required_fields():
+    r = client.get("/rallies/1")
+    data = r.json()
+    for field in ["event_id", "name", "status", "country"]:
+        assert field in data
+
+
+# ── /stages ───────────────────────────────────────────────────────────────────
+
+def test_list_stages_status():
+    r = client.get("/stages/")
+    assert r.status_code == 200
+
+def test_list_stages_count():
+    r = client.get("/stages/")
+    assert len(r.json()) == 5  # SS1-SS5
+
+def test_stage_has_required_fields():
+    r = client.get("/stages/")
+    stage = r.json()[0]
+    for field in ["stage_id", "stage_code", "name", "distance_km", "surface"]:
+        assert field in stage
+
+def test_get_stage_times_status():
+    r = client.get("/stages/101/times")
+    assert r.status_code == 200
+
+def test_get_stage_times_has_entries():
+    r = client.get("/stages/101/times")
+    data = r.json()
+    assert "entries" in data
+    assert len(data["entries"]) == 6
+
+def test_get_stage_times_first_position():
+    r = client.get("/stages/101/times")
+    entries = r.json()["entries"]
+    positions = [e["position"] for e in entries]
+    assert 1 in positions
+
+def test_get_stage_times_has_driver_name():
+    r = client.get("/stages/101/times")
+    entry = r.json()["entries"][0]
+    assert entry["driver_name"] != ""
+
+def test_get_stage_times_not_found():
+    r = client.get("/stages/9999/times")
+    assert r.status_code == 404
+
+
+# ── /drivers ──────────────────────────────────────────────────────────────────
+
+def test_list_drivers_status():
+    r = client.get("/drivers/")
+    assert r.status_code == 200
+
+def test_list_drivers_count():
+    r = client.get("/drivers/")
+    assert len(r.json()) == 6
+
+def test_driver_has_required_fields():
+    r = client.get("/drivers/")
+    driver = r.json()[0]
+    for field in ["entry_id", "driver_name", "manufacturer", "car_number"]:
+        assert field in driver
+
+
+# ── /drivers/classification ───────────────────────────────────────────────────
+
+def test_classification_status():
+    r = client.get("/drivers/classification")
+    assert r.status_code == 200
+
+def test_classification_has_entries():
+    r = client.get("/drivers/classification")
+    data = r.json()
+    assert "entries" in data
+    assert len(data["entries"]) == 6
+
+def test_classification_leader_gap_zero():
+    r = client.get("/drivers/classification")
+    leader = r.json()["entries"][0]
+    assert leader["position"] == 1
+    assert leader["diff_first_s"] == 0.0
+
+def test_classification_has_driver_info():
+    r = client.get("/drivers/classification")
+    leader = r.json()["entries"][0]
+    assert leader["driver_name"] != ""
+    assert leader["manufacturer"] != ""
+
+
+# ── /drivers/evolution ────────────────────────────────────────────────────────
+
+def test_evolution_status():
+    r = client.get("/drivers/evolution")
+    assert r.status_code == 200
+
+def test_evolution_all_drivers():
+    r = client.get("/drivers/evolution")
+    assert len(r.json()) == 6
+
+def test_evolution_has_positions():
+    r = client.get("/drivers/evolution")
+    driver = r.json()[0]
+    assert "positions" in driver
+    assert len(driver["positions"]) == 5  # 5 etapas
+
+
+# ── /drivers/compare ──────────────────────────────────────────────────────────
+
+def test_compare_status():
+    r = client.get("/drivers/compare?entry_a=201&entry_b=202")
+    assert r.status_code == 200
+
+def test_compare_has_both_drivers():
+    r = client.get("/drivers/compare?entry_a=201&entry_b=202")
+    data = r.json()
+    assert "driver_a" in data
+    assert "driver_b" in data
+
+def test_compare_has_stage_times():
+    r = client.get("/drivers/compare?entry_a=201&entry_b=202")
+    data = r.json()
+    assert len(data["stage_times_a"]) == 5
+    assert len(data["stage_times_b"]) == 5
+
+def test_compare_driver_not_found():
+    r = client.get("/drivers/compare?entry_a=201&entry_b=9999")
+    assert r.status_code == 404
+````
+
+## File: backend/tests/test_health.py
+````python
+"""Tests del Bloque 0 — verificación básica de la API."""
+
+from fastapi.testclient import TestClient
+
+from backend.app.main import app
+
+client = TestClient(app)
+
+
+def test_health_check_status_200():
+    """El endpoint /health debe devolver 200."""
+    response = client.get("/health")
+    assert response.status_code == 200
+
+
+def test_health_check_body():
+    """El endpoint /health debe devolver status ok."""
+    response = client.get("/health")
+    data = response.json()
+    assert data["status"] == "ok"
+    assert data["service"] == "rally-performance-analyzer"
+
+
+def test_docs_available():
+    """Swagger UI debe estar disponible en /docs."""
+    response = client.get("/docs")
+    assert response.status_code == 200
+````
+
+## File: backend/tests/test_ingestion.py
+````python
+"""
+Tests del Bloque 1 — Ingesta de datos.
+
+Validan los transformadores con datos de ejemplo (sin llamar a la API real).
+"""
+
+import pandas as pd
+import pytest
+
+from ingestion.transformers import (
+    transform_entries,
+    transform_events,
+    transform_overall_results,
+    transform_stage_times,
+    transform_stages,
+    _ms_to_seconds,
+    _ms_to_timestr,
+)
+
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
+
+def test_ms_to_seconds_basic():
+    assert _ms_to_seconds(90000) == 90.0
+
+def test_ms_to_seconds_precision():
+    assert _ms_to_seconds(90500) == 90.5
+
+def test_ms_to_seconds_none():
+    assert _ms_to_seconds(None) is None
+
+def test_ms_to_timestr_basic():
+    # 1 minuto 30 segundos = 90000 ms
+    assert _ms_to_timestr(90000) == "00:01:30.000"
+
+def test_ms_to_timestr_none():
+    assert _ms_to_timestr(None) is None
+
+
+# ── Eventos ───────────────────────────────────────────────────────────────────
+
+MOCK_EVENTS = [
+    {
+        "id": 1,
+        "name": "Rally Monte Carlo",
+        "status": "Completed",
+        "rally": {
+            "country": {"name": "France", "iso2": "FR"}
+        },
+        "eventDays": [
+            {"startDate": "2024-01-25"},
+            {"finishDate": "2024-01-28"},
+        ],
+    }
+]
+
+def test_transform_events_columns():
+    df = transform_events(MOCK_EVENTS)
+    assert "event_id" in df.columns
+    assert "name" in df.columns
+    assert "country" in df.columns
+
+def test_transform_events_values():
+    df = transform_events(MOCK_EVENTS)
+    assert df.iloc[0]["event_id"] == 1
+    assert df.iloc[0]["name"] == "Rally Monte Carlo"
+    assert df.iloc[0]["country"] == "France"
+
+def test_transform_events_empty():
+    df = transform_events([])
+    assert isinstance(df, pd.DataFrame)
+    assert len(df) == 0
+
+
+# ── Etapas ────────────────────────────────────────────────────────────────────
+
+MOCK_ITINERARY = {
+    "itineraryLegs": [
+        {
+            "name": "Leg 1",
+            "itinerarySections": [
+                {
+                    "stages": [
+                        {
+                            "stageId": 101,
+                            "code": "SS1",
+                            "name": "Col de Turini",
+                            "distance": 18.5,
+                            "stageType": "Tarmac",
+                            "status": "Completed",
+                        },
+                        {
+                            "stageId": 102,
+                            "code": "SS2",
+                            "name": "La Cabanette",
+                            "distance": 12.3,
+                            "stageType": "Tarmac",
+                            "status": "Completed",
+                        },
+                    ]
+                }
+            ],
+        }
+    ]
+}
+
+def test_transform_stages_count():
+    df = transform_stages(MOCK_ITINERARY)
+    assert len(df) == 2
+
+def test_transform_stages_columns():
+    df = transform_stages(MOCK_ITINERARY)
+    assert "stage_id" in df.columns
+    assert "stage_code" in df.columns
+    assert "distance_km" in df.columns
+
+def test_transform_stages_values():
+    df = transform_stages(MOCK_ITINERARY)
+    assert df.iloc[0]["stage_code"] == "SS1"
+    assert df.iloc[0]["distance_km"] == 18.5
+
+
+# ── Pilotos ───────────────────────────────────────────────────────────────────
+
+MOCK_ENTRIES = [
+    {
+        "entryId": 201,
+        "identifier": "1",
+        "driver": {
+            "fullName": "Sébastien Ogier",
+            "code": "OGI",
+            "country": {"iso2": "FR"},
+        },
+        "codriver": {"fullName": "Vincent Landais"},
+        "manufacturer": {"name": "Toyota"},
+        "group": {"name": "WRC"},
+    }
+]
+
+def test_transform_entries_columns():
+    df = transform_entries(MOCK_ENTRIES)
+    assert "entry_id" in df.columns
+    assert "driver_name" in df.columns
+    assert "manufacturer" in df.columns
+
+def test_transform_entries_values():
+    df = transform_entries(MOCK_ENTRIES)
+    assert df.iloc[0]["driver_name"] == "Sébastien Ogier"
+    assert df.iloc[0]["manufacturer"] == "Toyota"
+    assert df.iloc[0]["car_number"] == "1"
+
+
+# ── Tiempos de etapa ──────────────────────────────────────────────────────────
+
+MOCK_STAGE_TIMES = [
+    {
+        "entryId": 201,
+        "position": 1,
+        "elapsedDurationMs": 834500,
+        "diffFirstMs": 0,
+        "diffPrevMs": 0,
+        "status": "Completed",
+    },
+    {
+        "entryId": 202,
+        "position": 2,
+        "elapsedDurationMs": 835500,
+        "diffFirstMs": 1000,
+        "diffPrevMs": 1000,
+        "status": "Completed",
+    },
+]
+
+def test_transform_stage_times_count():
+    df = transform_stage_times(MOCK_STAGE_TIMES, stage_id=101, event_id=1)
+    assert len(df) == 2
+
+def test_transform_stage_times_columns():
+    df = transform_stage_times(MOCK_STAGE_TIMES, stage_id=101, event_id=1)
+    assert "time_s" in df.columns
+    assert "diff_first_s" in df.columns
+    assert "time_str" in df.columns
+
+def test_transform_stage_times_conversion():
+    df = transform_stage_times(MOCK_STAGE_TIMES, stage_id=101, event_id=1)
+    assert df.iloc[0]["time_s"] == 834.5
+    assert df.iloc[1]["diff_first_s"] == 1.0
+
+def test_transform_stage_times_sorted():
+    """Los tiempos deben estar ordenados por posición."""
+    df = transform_stage_times(MOCK_STAGE_TIMES, stage_id=101, event_id=1)
+    assert df.iloc[0]["position"] == 1
+    assert df.iloc[1]["position"] == 2
+
+
+# ── Clasificación general ─────────────────────────────────────────────────────
+
+MOCK_OVERALL = [
+    {
+        "entryId": 201,
+        "position": 1,
+        "totalTimeMs": 5000000,
+        "diffFirstMs": 0,
+        "penaltyTimeMs": 0,
+    },
+    {
+        "entryId": 202,
+        "position": 2,
+        "totalTimeMs": 5015000,
+        "diffFirstMs": 15000,
+        "penaltyTimeMs": 0,
+    },
+]
+
+def test_transform_overall_results_count():
+    df = transform_overall_results(MOCK_OVERALL, stage_id=101, event_id=1)
+    assert len(df) == 2
+
+def test_transform_overall_results_leader_gap():
+    df = transform_overall_results(MOCK_OVERALL, stage_id=101, event_id=1)
+    assert df.iloc[0]["diff_first_s"] == 0.0
+    assert df.iloc[1]["diff_first_s"] == 15.0
+````
+
+## File: conftest.py
+````python
+
+````
+
+## File: dashboard/app.py
+````python
+"""
+Rally Performance Analyzer â Dashboard principal.
+
+PĄgina de overview: clasificaciĂłn general + KPIs del rally.
+"""
+
+from __future__ import annotations
+
+import pandas as pd
+import streamlit as st
+
+from dashboard.components import api_client as api
+
+st.set_page_config(
+    page_title="Rally Performance Analyzer",
+    page_icon="đ",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+
+# ââ CSS personalizado âââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+st.markdown("""
+<style>
+    div[data-testid="stMetricValue"] { font-size: 1.4rem; }
+</style>
+""", unsafe_allow_html=True)
+
+# ââ Sidebar âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+with st.sidebar:
+    st.markdown("## đ Rally Analyzer")
+    st.markdown("---")
+    st.markdown("**NavegaciĂłn**")
+    st.page_link("app.py", label="đ  Overview")
+    st.page_link("pages/01_stages.py", label="âąď¸ Etapas")
+    st.page_link("pages/02_evolution.py", label="đ EvoluciĂłn")
+    st.page_link("pages/03_compare.py", label="đ Comparativa")
+    st.markdown("---")
+    st.caption("Datos: Rally Monte Carlo 2024")
+
+# ââ Header ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+st.title("đ Rally Performance Analyzer")
+st.markdown("**World Rally Championship â AnĂĄlisis de datos**")
+st.divider()
+
+# ââ Datos âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+rallies = api.get_rallies()
+classification = api.get_classification()
+stages = api.get_stages()
+drivers = api.get_drivers()
+
+if not rallies or not classification:
+    st.error("â ď¸ No se puede conectar con la API. AsegĂşrate de que FastAPI estĂĄ corriendo en localhost:8000")
+    st.code("uvicorn backend.app.main:app --reload")
+    st.stop()
+
+rally = rallies[0]
+entries = classification.get("entries", [])
+
+# ââ KPIs ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+col1, col2, col3, col4 = st.columns(4)
+with col1:
+    st.metric("Rally", rally["name"].replace("Rallye Automobile ", ""))
+with col2:
+    st.metric("PaĂ­s", rally["country"])
+with col3:
+    st.metric("Etapas", len(stages))
+with col4:
+    st.metric("Pilotos", len(drivers))
+
+st.divider()
+
+# ââ ClasificaciĂłn + fabricantes âââââââââââââââââââââââââââââââââââââââââââââââ
+col_left, col_right = st.columns([3, 2])
+
+with col_left:
+    st.markdown("### đ ClasificaciĂłn General Final")
+    if entries:
+        rows = []
+        for e in entries:
+            gap = e.get("diff_first_s", 0)
+            gap_str = "LĂDER" if gap == 0 else f"+{gap:.1f}s"
+            rows.append({
+                "Pos.": e["position"],
+                "Piloto": e["driver_name"],
+                "#": e.get("car_number", ""),
+                "Fabricante": e.get("manufacturer", ""),
+                "Tiempo total": e.get("total_time_str", "-"),
+                "Gap": gap_str,
+            })
+        df = pd.DataFrame(rows)
+        st.dataframe(df, use_container_width=True, hide_index=True)
+
+with col_right:
+    st.markdown("### đ­ Fabricantes")
+    fab_data: dict[str, int] = {}
+    for e in entries:
+        fab = e.get("manufacturer", "Otro")
+        fab_data[fab] = fab_data.get(fab, 0) + 1
+    for fab, count in sorted(fab_data.items()):
+        st.markdown(f"**{fab}** â {count} piloto{'s' if count > 1 else ''}")
+
+    st.markdown("---")
+    st.markdown("### đ Podio")
+    medals = ["đĽ", "đĽ", "đĽ"]
+    for e in entries[:3]:
+        gap = e.get("diff_first_s", 0)
+        gap_str = "LĂDER" if gap == 0 else f"+{gap:.1f}s"
+        st.markdown(
+            f"{medals[e['position']-1]} **{e['driver_name']}** "
+            f"({e.get('manufacturer','')}) â {gap_str}"
+        )
+````
+
+## File: dashboard/components/api_client.py
+````python
+"""
+Cliente de la API para el dashboard.
+
+Encapsula todas las llamadas al backend FastAPI.
+"""
+
+from __future__ import annotations
+
+import logging
+import os
+
+import requests
+
+logger = logging.getLogger(__name__)
+
+_API_BASE = os.getenv("DASHBOARD_API_URL", "http://localhost:8000")
+
+
+def _get(path: str, params: dict | None = None) -> dict | list | None:
+    url = f"{_API_BASE}{path}"
+    try:
+        r = requests.get(url, params=params, timeout=10)
+        r.raise_for_status()
+        return r.json()
+    except requests.exceptions.ConnectionError:
+        logger.error("No se puede conectar con la API en %s", _API_BASE)
+        return None
+    except requests.exceptions.HTTPError as e:
+        logger.error("HTTP error %s en %s", e.response.status_code, url)
+        return None
+
+
+def get_rallies() -> list[dict]:
+    return _get("/rallies/") or []
+
+
+def get_rally(event_id: int) -> dict | None:
+    return _get(f"/rallies/{event_id}")
+
+
+def get_stages() -> list[dict]:
+    return _get("/stages/") or []
+
+
+def get_stage_times(stage_id: int) -> dict | None:
+    return _get(f"/stages/{stage_id}/times")
+
+
+def get_drivers() -> list[dict]:
+    return _get("/drivers/") or []
+
+
+def get_classification() -> dict | None:
+    return _get("/drivers/classification")
+
+
+def get_evolution() -> list[dict]:
+    return _get("/drivers/evolution") or []
+
+
+def compare_drivers(entry_a: int, entry_b: int) -> dict | None:
+    return _get("/drivers/compare", params={"entry_a": entry_a, "entry_b": entry_b})
+````
+
+## File: dashboard/components/charts.py
+````python
+"""
+Componentes de gráficos reutilizables — Plotly.
+
+Cada función recibe datos ya procesados y devuelve una figura Plotly.
+"""
+
+from __future__ import annotations
+
+import plotly.express as px
+import plotly.graph_objects as go
+import pandas as pd
+
+# ── Paleta de colores ─────────────────────────────────────────────────────────
+MANUFACTURER_COLORS = {
+    "Toyota":  "#EB0A1E",
+    "Hyundai": "#003399",
+    "Ford":    "#003876",
+    "Citroën": "#E3002B",
+}
+
+DEFAULT_COLORS = px.colors.qualitative.Set2
+
+
+def _driver_color(manufacturer: str, idx: int = 0) -> str:
+    return MANUFACTURER_COLORS.get(manufacturer, DEFAULT_COLORS[idx % len(DEFAULT_COLORS)])
+
+
+# ── Gráfico 1: Tiempos de etapa (bar chart horizontal) ───────────────────────
+
+def create_stage_times_chart(df: pd.DataFrame, stage_code: str) -> go.Figure:
+    """
+    Bar chart horizontal con los tiempos de una etapa.
+    Barras coloreadas por fabricante, con gap vs líder anotado.
+    """
+    if df.empty:
+        return go.Figure()
+
+    df = df.sort_values("position", ascending=False).copy()
+    df["label"] = df["driver_code"] + " (#" + df["car_number"].astype(str) + ")"
+    df["gap_str"] = df["diff_first_s"].apply(
+        lambda x: "LÍDER" if x == 0 else f"+{x:.1f}s"
+    )
+    colors = [_driver_color(m, i) for i, m in enumerate(df["manufacturer"])]
+
+    fig = go.Figure()
+    fig.add_trace(go.Bar(
+        x=df["time_s"],
+        y=df["label"],
+        orientation="h",
+        marker_color=colors,
+        text=df["gap_str"],
+        textposition="outside",
+        hovertemplate=(
+            "<b>%{y}</b><br>"
+            "Tiempo: %{x:.3f}s<br>"
+            "Gap líder: %{text}<extra></extra>"
+        ),
+    ))
+
+    fig.update_layout(
+        title=f"Tiempos — {stage_code}",
+        xaxis_title="Tiempo (s)",
+        yaxis_title="",
+        plot_bgcolor="white",
+        paper_bgcolor="white",
+        font=dict(size=12),
+        margin=dict(l=10, r=80, t=50, b=40),
+        height=320,
+        xaxis=dict(
+            gridcolor="#eeeeee",
+            range=[df["time_s"].min() * 0.995, df["time_s"].max() * 1.01],
+        ),
+    )
+    return fig
+
+
+# ── Gráfico 2: Gap acumulado respecto al líder ────────────────────────────────
+
+def create_gap_evolution_chart(df: pd.DataFrame) -> go.Figure:
+    """
+    Line chart del gap acumulado respecto al líder a lo largo del rally.
+    Una línea por piloto (excluye al líder que siempre es 0).
+    """
+    if df.empty:
+        return go.Figure()
+
+    fig = go.Figure()
+    drivers = df["driver_code"].unique()
+
+    for i, code in enumerate(drivers):
+        d = df[df["driver_code"] == code].sort_values("stage_id")
+        manufacturer = d["manufacturer"].iloc[0] if "manufacturer" in d.columns else ""
+        color = _driver_color(manufacturer, i)
+
+        fig.add_trace(go.Scatter(
+            x=d["stage_code"],
+            y=d["diff_first_s"],
+            mode="lines+markers",
+            name=code,
+            line=dict(color=color, width=2),
+            marker=dict(size=7),
+            hovertemplate=(
+                f"<b>{code}</b><br>"
+                "Etapa: %{x}<br>"
+                "Gap líder: +%{y:.1f}s<extra></extra>"
+            ),
+        ))
+
+    fig.update_layout(
+        title="Gap acumulado respecto al líder",
+        xaxis_title="Etapa",
+        yaxis_title="Segundos (+s)",
+        plot_bgcolor="white",
+        paper_bgcolor="white",
+        font=dict(size=12),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        margin=dict(l=10, r=10, t=60, b=40),
+        height=380,
+        xaxis=dict(gridcolor="#eeeeee"),
+        yaxis=dict(gridcolor="#eeeeee"),
+    )
+    return fig
+
+
+# ── Gráfico 3: Evolución de posiciones (bump chart) ───────────────────────────
+
+def create_position_evolution_chart(df: pd.DataFrame) -> go.Figure:
+    """
+    Bump chart: evolución de la posición de cada piloto etapa a etapa.
+    Eje Y invertido (posición 1 arriba).
+    """
+    if df.empty:
+        return go.Figure()
+
+    fig = go.Figure()
+    drivers = df["driver_code"].unique()
+
+    for i, code in enumerate(drivers):
+        d = df[df["driver_code"] == code].sort_values("stage_id")
+        manufacturer = d["manufacturer"].iloc[0] if "manufacturer" in d.columns else ""
+        color = _driver_color(manufacturer, i)
+
+        fig.add_trace(go.Scatter(
+            x=d["stage_code"],
+            y=d["position"],
+            mode="lines+markers+text",
+            name=code,
+            line=dict(color=color, width=2.5),
+            marker=dict(size=10, color=color),
+            text=d["position"],
+            textposition="middle right",
+            textfont=dict(size=10, color=color),
+            hovertemplate=(
+                f"<b>{code}</b><br>"
+                "Etapa: %{x}<br>"
+                "Posición: %{y}<extra></extra>"
+            ),
+        ))
+
+    n_stages = df["stage_id"].nunique()
+    fig.update_layout(
+        title="Evolución de posiciones",
+        xaxis_title="Etapa",
+        yaxis_title="Posición",
+        yaxis=dict(
+            autorange="reversed",
+            tickmode="linear",
+            tick0=1,
+            dtick=1,
+            gridcolor="#eeeeee",
+        ),
+        xaxis=dict(gridcolor="#eeeeee"),
+        plot_bgcolor="white",
+        paper_bgcolor="white",
+        font=dict(size=12),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        margin=dict(l=10, r=60, t=60, b=40),
+        height=420,
+    )
+    return fig
+
+
+# ── Gráfico 4: Comparativa entre dos pilotos ─────────────────────────────────
+
+def create_comparison_chart(
+    df_a: pd.DataFrame,
+    df_b: pd.DataFrame,
+    name_a: str,
+    name_b: str,
+    manufacturer_a: str = "",
+    manufacturer_b: str = "",
+) -> go.Figure:
+    """
+    Grouped bar chart comparando los tiempos de etapa de dos pilotos.
+    """
+    if df_a.empty or df_b.empty:
+        return go.Figure()
+
+    color_a = _driver_color(manufacturer_a, 0)
+    color_b = _driver_color(manufacturer_b, 1)
+
+    fig = go.Figure()
+    fig.add_trace(go.Bar(
+        name=name_a,
+        x=df_a["stage_code"],
+        y=df_a["time_s"],
+        marker_color=color_a,
+        hovertemplate=f"<b>{name_a}</b><br>Etapa: %{{x}}<br>Tiempo: %{{y:.3f}}s<extra></extra>",
+    ))
+    fig.add_trace(go.Bar(
+        name=name_b,
+        x=df_b["stage_code"],
+        y=df_b["time_s"],
+        marker_color=color_b,
+        hovertemplate=f"<b>{name_b}</b><br>Etapa: %{{x}}<br>Tiempo: %{{y:.3f}}s<extra></extra>",
+    ))
+
+    fig.update_layout(
+        title=f"Comparativa: {name_a} vs {name_b}",
+        barmode="group",
+        xaxis_title="Etapa",
+        yaxis_title="Tiempo (s)",
+        plot_bgcolor="white",
+        paper_bgcolor="white",
+        font=dict(size=12),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        margin=dict(l=10, r=10, t=60, b=40),
+        height=360,
+        xaxis=dict(gridcolor="#eeeeee"),
+        yaxis=dict(gridcolor="#eeeeee"),
+    )
+    return fig
+````
+
+## File: dashboard/pages/01_stages.py
+````python
+"""Página de etapas — tiempos por etapa con selector."""
+
+from __future__ import annotations
+
+import pandas as pd
+import streamlit as st
+
+from dashboard.components import api_client as api
+from dashboard.components.charts import create_stage_times_chart
+
+st.set_page_config(page_title="Etapas — Rally Analyzer", page_icon="⏱️", layout="wide")
+
+with st.sidebar:
+    st.markdown("## 🏁 Rally Analyzer")
+    st.markdown("---")
+    st.page_link("app.py", label="🏠 Overview")
+    st.page_link("pages/01_stages.py", label="⏱️ Etapas")
+    st.page_link("pages/02_evolution.py", label="📈 Evolución")
+    st.page_link("pages/03_compare.py", label="🔀 Comparativa")
+
+st.title("⏱️ Tiempos por Etapa")
+st.divider()
+
+# ── Carga de datos ────────────────────────────────────────────────────────────
+stages = api.get_stages()
+if not stages:
+    st.error("⚠️ No se puede conectar con la API.")
+    st.stop()
+
+# ── Selector de etapa ─────────────────────────────────────────────────────────
+stage_options = {f"{s['stage_code']} — {s['name']} ({s['distance_km']} km)": s for s in stages}
+selected_label = st.selectbox("Selecciona una etapa", list(stage_options.keys()))
+selected_stage = stage_options[selected_label]
+stage_id = selected_stage["stage_id"]
+stage_code = selected_stage["stage_code"]
+
+# ── Info de la etapa ──────────────────────────────────────────────────────────
+col1, col2, col3 = st.columns(3)
+with col1:
+    st.metric("Código", stage_code)
+with col2:
+    st.metric("Distancia", f"{selected_stage['distance_km']} km")
+with col3:
+    st.metric("Superficie", selected_stage.get("surface", "-"))
+
+st.divider()
+
+# ── Tiempos ───────────────────────────────────────────────────────────────────
+result = api.get_stage_times(stage_id)
+if not result or not result.get("entries"):
+    st.warning("No hay tiempos disponibles para esta etapa.")
+    st.stop()
+
+entries = result["entries"]
+df = pd.DataFrame(entries)
+
+# Gráfico
+fig = create_stage_times_chart(df, stage_code)
+st.plotly_chart(fig, use_container_width=True)
+
+# Tabla detallada
+st.markdown("### 📋 Tabla de tiempos")
+table_rows = []
+for e in entries:
+    gap = e.get("diff_first_s", 0)
+    prev = e.get("diff_prev_s", 0)
+    table_rows.append({
+        "Pos.": e["position"],
+        "Piloto": e["driver_name"],
+        "#": e.get("car_number", ""),
+        "Fabricante": e.get("manufacturer", ""),
+        "Tiempo": e.get("time_str", "-"),
+        "Gap líder": "LÍDER" if gap == 0 else f"+{gap:.3f}s",
+        "Gap anterior": "—" if prev == 0 else f"+{prev:.3f}s",
+    })
+
+df_table = pd.DataFrame(table_rows)
+st.dataframe(df_table, use_container_width=True, hide_index=True)
+````
+
+## File: dashboard/pages/02_evolution.py
+````python
+"""Página de evolución — bump chart y gap acumulado."""
+
+from __future__ import annotations
+
+import pandas as pd
+import streamlit as st
+
+from dashboard.components import api_client as api
+from dashboard.components.charts import (
+    create_gap_evolution_chart,
+    create_position_evolution_chart,
+)
+
+st.set_page_config(page_title="Evolución — Rally Analyzer", page_icon="📈", layout="wide")
+
+with st.sidebar:
+    st.markdown("## 🏁 Rally Analyzer")
+    st.markdown("---")
+    st.page_link("app.py", label="🏠 Overview")
+    st.page_link("pages/01_stages.py", label="⏱️ Etapas")
+    st.page_link("pages/02_evolution.py", label="📈 Evolución")
+    st.page_link("pages/03_compare.py", label="🔀 Comparativa")
+
+st.title("📈 Evolución del Rally")
+st.divider()
+
+# ── Carga de datos ────────────────────────────────────────────────────────────
+evolution = api.get_evolution()
+if not evolution:
+    st.error("⚠️ No se puede conectar con la API.")
+    st.stop()
+
+# Construir DataFrame plano
+rows = []
+for driver in evolution:
+    for pos in driver["positions"]:
+        rows.append({
+            "entry_id": driver["entry_id"],
+            "driver_name": driver["driver_name"],
+            "driver_code": driver["driver_code"],
+            "manufacturer": driver["manufacturer"],
+            "stage_id": pos["stage_id"],
+            "stage_code": pos["stage_code"],
+            "position": pos["position"],
+            "diff_first_s": pos.get("diff_first_s", 0) or 0,
+        })
+
+df = pd.DataFrame(rows)
+
+# ── Filtro de pilotos ─────────────────────────────────────────────────────────
+all_drivers = sorted(df["driver_code"].unique())
+selected = st.multiselect(
+    "Filtrar pilotos (vacío = todos)",
+    options=all_drivers,
+    default=[],
+)
+if selected:
+    df_filtered = df[df["driver_code"].isin(selected)]
+else:
+    df_filtered = df
+
+# ── Gráfico 1: Bump chart ─────────────────────────────────────────────────────
+st.markdown("### 🎯 Posición a lo largo del rally")
+fig_bump = create_position_evolution_chart(df_filtered)
+st.plotly_chart(fig_bump, use_container_width=True)
+
+# ── Gráfico 2: Gap acumulado ──────────────────────────────────────────────────
+st.markdown("### ⏳ Gap acumulado respecto al líder")
+
+# Excluir al líder en cada etapa (diff=0 constante no aporta info)
+df_gap = df_filtered[df_filtered["diff_first_s"] > 0].copy()
+if df_gap.empty:
+    st.info("Solo hay un piloto seleccionado — el líder no tiene gap.")
+else:
+    fig_gap = create_gap_evolution_chart(df_gap)
+    st.plotly_chart(fig_gap, use_container_width=True)
+
+# ── Tabla resumen ─────────────────────────────────────────────────────────────
+st.markdown("### 📋 Posiciones por etapa")
+pivot = df_filtered.pivot_table(
+    index=["driver_code", "manufacturer"],
+    columns="stage_code",
+    values="position",
+    aggfunc="first",
+).reset_index()
+pivot.columns.name = None
+st.dataframe(pivot, use_container_width=True, hide_index=True)
+````
+
+## File: dashboard/pages/03_compare.py
+````python
+"""Página de comparativa — dos pilotos cara a cara."""
+
+from __future__ import annotations
+
+import pandas as pd
+import streamlit as st
+
+from dashboard.components import api_client as api
+from dashboard.components.charts import create_comparison_chart
+
+st.set_page_config(page_title="Comparativa — Rally Analyzer", page_icon="🔀", layout="wide")
+
+with st.sidebar:
+    st.markdown("## 🏁 Rally Analyzer")
+    st.markdown("---")
+    st.page_link("app.py", label="🏠 Overview")
+    st.page_link("pages/01_stages.py", label="⏱️ Etapas")
+    st.page_link("pages/02_evolution.py", label="📈 Evolución")
+    st.page_link("pages/03_compare.py", label="🔀 Comparativa")
+
+st.title("🔀 Comparativa entre Pilotos")
+st.divider()
+
+# ── Carga de pilotos ──────────────────────────────────────────────────────────
+drivers = api.get_drivers()
+if not drivers:
+    st.error("⚠️ No se puede conectar con la API.")
+    st.stop()
+
+driver_options = {
+    f"{d['driver_name']} ({d['manufacturer']}) #{d['car_number']}": d
+    for d in drivers
+}
+driver_names = list(driver_options.keys())
+
+# ── Selectores ────────────────────────────────────────────────────────────────
+col1, col2 = st.columns(2)
+with col1:
+    sel_a = st.selectbox("Piloto A", driver_names, index=0)
+with col2:
+    sel_b = st.selectbox("Piloto B", driver_names, index=1)
+
+driver_a = driver_options[sel_a]
+driver_b = driver_options[sel_b]
+
+if driver_a["entry_id"] == driver_b["entry_id"]:
+    st.warning("Selecciona dos pilotos diferentes.")
+    st.stop()
+
+# ── Comparativa ───────────────────────────────────────────────────────────────
+result = api.compare_drivers(driver_a["entry_id"], driver_b["entry_id"])
+if not result:
+    st.error("No se pudo obtener la comparativa.")
+    st.stop()
+
+times_a = result.get("stage_times_a", [])
+times_b = result.get("stage_times_b", [])
+
+df_a = pd.DataFrame(times_a)
+df_b = pd.DataFrame(times_b)
+
+# ── KPIs de comparativa ───────────────────────────────────────────────────────
+st.markdown(f"### {driver_a['driver_name']} vs {driver_b['driver_name']}")
+
+if not df_a.empty and not df_b.empty:
+    wins_a = sum(1 for _, ra in df_a.iterrows()
+                 for _, rb in df_b.iterrows()
+                 if ra["stage_code"] == rb["stage_code"] and
+                 (ra.get("time_s") or 9999) < (rb.get("time_s") or 9999))
+    wins_b = len(df_a) - wins_a
+
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        st.metric(f"Etapas ganadas por {driver_a['driver_code']}", wins_a)
+    with c2:
+        st.metric(f"Etapas ganadas por {driver_b['driver_code']}", wins_b)
+    with c3:
+        st.metric("Total etapas", len(df_a))
+
+st.divider()
+
+# ── Gráfico comparativo ───────────────────────────────────────────────────────
+fig = create_comparison_chart(
+    df_a, df_b,
+    driver_a["driver_name"], driver_b["driver_name"],
+    driver_a.get("manufacturer", ""), driver_b.get("manufacturer", ""),
+)
+st.plotly_chart(fig, use_container_width=True)
+
+# ── Tabla detallada ───────────────────────────────────────────────────────────
+st.markdown("### 📋 Detalle por etapa")
+if not df_a.empty and not df_b.empty:
+    merged = df_a.merge(
+        df_b, on="stage_code", suffixes=(f"_{driver_a['driver_code']}", f"_{driver_b['driver_code']}")
+    )
+    time_col_a = f"time_s_{driver_a['driver_code']}"
+    time_col_b = f"time_s_{driver_b['driver_code']}"
+
+    if time_col_a in merged.columns and time_col_b in merged.columns:
+        merged["Diferencia (s)"] = (merged[time_col_a] - merged[time_col_b]).round(3)
+        merged["Ganador"] = merged.apply(
+            lambda r: driver_a["driver_code"] if r[time_col_a] < r[time_col_b]
+            else driver_b["driver_code"], axis=1
+        )
+        display = merged[["stage_code", time_col_a, time_col_b, "Diferencia (s)", "Ganador"]].copy()
+        display.columns = [
+            "Etapa",
+            f"Tiempo {driver_a['driver_code']} (s)",
+            f"Tiempo {driver_b['driver_code']} (s)",
+            "Diferencia (s)",
+            "Ganador",
+        ]
+        st.dataframe(display, use_container_width=True, hide_index=True)
+````
+
+## File: data/processed/.gitkeep
+````
+
+````
+
+## File: data/raw/.gitkeep
+````
+
+````
+
+## File: docs/bloque-00-setup.md
+````markdown
+# Bloque 0 — Setup del Proyecto
+
+## Objetivo
+
+Crear la estructura base del proyecto, configurar el entorno de desarrollo y
+verificar que FastAPI y Streamlit arrancan correctamente.
+
+---
+
+## Estructura de carpetas creada
+
+```
+rally-performance-analyzer/
+├── backend/
+│   ├── app/
+│   │   ├── __init__.py
+│   │   ├── main.py          # FastAPI app + CORS + /health
+│   │   ├── config.py        # Settings con pydantic-settings
+│   │   ├── models/          # (vacío — se rellena en Bloque 2)
+│   │   ├── routers/         # (vacío — se rellena en Bloque 2)
+│   │   └── services/        # (vacío — se rellena en Bloque 2)
+│   └── tests/
+│       ├── __init__.py
+│       └── test_health.py   # 3 tests básicos del /health
+├── data/
+│   ├── raw/                 # JSON descargados de la WRC API (Bloque 1)
+│   └── processed/           # CSV/Parquet limpios (Bloque 1)
+├── ingestion/
+│   └── __init__.py          # (se rellena en Bloque 1)
+├── dashboard/
+│   └── app.py               # Streamlit hello-world con métricas placeholder
+├── docs/
+│   └── bloque-00-setup.md   # Este archivo
+├── .env.example
+├── .gitignore
+├── Makefile
+├── pytest.ini
+└── requirements.txt
+```
+
+---
+
+## Archivos clave
+
+### `requirements.txt`
+
+Dependencias con versiones fijadas para reproducibilidad:
+
+| Paquete | Versión | Uso |
+|---|---|---|
+| fastapi | 0.111.0 | Framework backend |
+| uvicorn | 0.29.0 | Servidor ASGI |
+| streamlit | 1.35.0 | Dashboard |
+| pandas | 2.2.2 | Procesamiento de datos |
+| plotly | 5.22.0 | Visualización |
+| httpx | 0.27.0 | Cliente HTTP (WRC API) |
+| pydantic | 2.7.1 | Validación de modelos |
+| pytest | 8.2.0 | Tests |
+| python-dotenv | 1.0.1 | Variables de entorno |
+
+### `backend/app/main.py`
+
+- Crea la instancia de FastAPI con título, descripción y versión.
+- Añade middleware CORS para permitir llamadas desde Streamlit.
+- Define el endpoint `GET /health` que devuelve `{"status": "ok"}`.
+
+### `backend/app/config.py`
+
+- Usa `pydantic-settings` para cargar variables desde `.env`.
+- Expone propiedades `raw_dir` y `processed_dir` como rutas absolutas.
+- Se usa en todos los bloques siguientes para acceder a los paths de datos.
+
+### `dashboard/app.py`
+
+- Página inicial de Streamlit con layout wide.
+- Muestra el estado de cada bloque con `st.metric` como placeholders.
+
+### `Makefile`
+
+| Comando | Acción |
+|---|---|
+| `make install` | Crea venv e instala dependencias |
+| `make run-api` | Arranca FastAPI en `localhost:8000` |
+| `make run-dashboard` | Arranca Streamlit en `localhost:8501` |
+| `make test` | Ejecuta pytest |
+
+---
+
+## Cómo arrancar
+
+```bash
+# 1. Crear entorno virtual e instalar dependencias
+make install
+
+# 2. Activar el entorno virtual
+source venv/bin/activate   # Linux/Mac
+# o en Windows:
+# venv\Scripts\activate
+
+# 3. Arrancar la API (terminal 1)
+make run-api
+
+# 4. Arrancar el dashboard (terminal 2)
+make run-dashboard
+```
+
+---
+
+## Validaciones del Bloque 0
+
+### V1 — FastAPI arranca
+```
+http://localhost:8000/health
+→ {"status": "ok", "service": "rally-performance-analyzer"}
+```
+
+### V2 — Swagger disponible
+```
+http://localhost:8000/docs
+→ Interfaz Swagger UI visible en el navegador
+```
+
+### V3 — Streamlit arranca
+```
+http://localhost:8501
+→ Dashboard visible con título "🏁 Rally Performance Analyzer"
+```
+
+### V4 — Tests pasan
+```bash
+make test
+→ 3 passed
+```
+
+---
+
+## Posibles errores comunes
+
+| Error | Causa | Solución |
+|---|---|---|
+| `ModuleNotFoundError: pydantic_settings` | Falta instalar | `pip install pydantic-settings` |
+| `address already in use :8000` | Puerto ocupado | `lsof -i :8000` y matar el proceso |
+| `address already in use :8501` | Puerto ocupado | `lsof -i :8501` y matar el proceso |
+| Tests fallan con `ModuleNotFoundError` | pytest no ve el root | Ejecutar desde la raíz del proyecto |
+
+---
+
+*Siguiente: Bloque 1 — Ingesta de datos desde la WRC API.*
+````
+
+## File: docs/bloque-01-ingesta.md
+````markdown
+# Bloque 1 — Ingesta de Datos WRC
+
+## Lecciones del Bloque 0
+
+Problemas reales encontrados durante el Bloque 0:
+
+| Problema | Causa | Solución |
+|---|---|---|
+| `pip install` falla con `pydantic-core` / `pillow` | Python 3.14 sin wheels precompilados | Usar Python 3.11 (`py -3.11 -m venv venv`) |
+| `SSLError: CERTIFICATE_VERIFY_FAILED` | Red corporativa con proxy | `pip install -r requirements.txt --trusted-host pypi.org --trusted-host files.pythonhosted.org` |
+| `ModuleNotFoundError: No module named 'backend'` | pytest no encuentra el root | Crear `conftest.py` vacío en raíz + `backend/__init__.py` |
+
+---
+
+## Objetivo
+
+Conectar con la WRC Live Timing API, descargar datos reales de un rally completo,
+limpiarlos con Pandas y guardarlos en `data/processed/` como CSVs listos para usar.
+
+---
+
+## Problema encontrado: api.wrc.com ya no existe
+
+Durante el desarrollo de este bloque se descubrió que **`api.wrc.com` ha dejado de funcionar**.
+
+### Diagnóstico
+
+- Error en Python: `httpx.ConnectError: [Errno 11001] getaddrinfo failed`
+- Error en navegador: `DNS_PROBE_FINISHED_NXDOMAIN`
+- Verificado desde servidor externo (no es la red corporativa): `curl: (6) Could not resolve host: api.wrc.com`
+
+**Conclusión: el dominio `api.wrc.com` ha sido dado de baja por WRC.** La API era no oficial y dependía de la infraestructura interna del WRC Live Timing, que ha cambiado.
+
+### Decisión: Mock Data
+
+Se optó por crear datos mock realistas en lugar de buscar un scraper alternativo. Motivos:
+
+1. Para un proyecto de portfolio lo que importa es la **arquitectura y los gráficos**, no la fuente exacta de los datos.
+2. Los datos mock siguen la **estructura idéntica** a la API real (mismos campos, mismos tipos).
+3. En una entrevista se puede explicar con total transparencia: *"La API original dejó de estar disponible, así que construí datos mock con la misma estructura para poder demostrar el pipeline completo."*
+
+---
+
+## Cómo está construido el mock
+
+El fichero `ingestion/mock_data.py` simula el **Rally Monte Carlo 2024** con datos verosímiles:
+
+### Estructura
+
+| Dataset | Contenido |
+|---|---|
+| `MOCK_SEASON` | 3 eventos (Monte Carlo, Sweden, Kenya) con estado `Completed` |
+| `MOCK_ITINERARY` | 3 legs, 5 etapas (SS1-SS5) con distancias reales |
+| `MOCK_ENTRIES` | 6 pilotos reales: Ogier, Evans, Neuville, Tänak, Rovanperä + 1 |
+| `MOCK_STAGE_TIMES` | Tiempos por etapa para los 6 pilotos, en milisegundos |
+| `MOCK_OVERALL` | Clasificación acumulada tras cada etapa |
+
+### Criterios de realismo
+
+- Tiempos basados en **ritmo real del WRC en tarmac (~1 min/km)**
+- SS1 (18.55 km) → ~834 segundos (13:54) para el ganador
+- Gaps entre pilotos de 1-3 segundos por etapa (valores reales del WRC)
+- Los líderes de etapa varían (no siempre gana el mismo piloto)
+- La clasificación general evoluciona de forma coherente
+
+### Control del modo mock
+
+```bash
+# Activar mock (desarrollo / red corporativa)
+WRC_USE_MOCK=true python -m ingestion.pipeline
+
+# Desactivar mock (cuando la API real esté disponible)
+WRC_USE_MOCK=false python -m ingestion.pipeline
+```
+
+También se puede configurar en el `.env`:
+```
+WRC_USE_MOCK=true
+```
+
+---
+
+## Archivos creados
+
+```
+ingestion/
+├── __init__.py
+├── wrc_client.py      # Cliente HTTP con soporte mock/real
+├── mock_data.py       # Datos mock del Rally Monte Carlo 2024
+├── transformers.py    # Limpieza y normalización con Pandas
+└── pipeline.py        # Orquestador — descarga y guarda todo
+
+backend/tests/
+└── test_ingestion.py  # 19 tests de los transformadores
+```
+
+---
+
+## Arquitectura de la ingesta
+
+```
+WRC API (o mock_data.py)
+        │
+        ▼
+wrc_client.py          → llamadas HTTP con httpx (o datos mock)
+        │  JSON crudo
+        ▼
+transformers.py        → limpieza, normalización, conversión ms→s
+        │  DataFrames
+        ▼
+pipeline.py            → orquesta y guarda en data/raw/ y data/processed/
+        │
+        ├── data/raw/          JSON originales (trazabilidad)
+        └── data/processed/    CSVs limpios (usados por FastAPI)
+```
+
+---
+
+## Módulos
+
+### `wrc_client.py`
+
+Cliente HTTP con modo dual (real/mock):
+
+| Función | Descripción |
+|---|---|
+| `get_active_season()` | Lista de eventos de la temporada |
+| `get_itinerary(event_id)` | Legs, sections y stages |
+| `get_entries(event_id)` | Pilotos inscritos |
+| `get_stage_times(event_id, stage_id)` | Tiempos de una etapa |
+| `get_overall_results(event_id, stage_id)` | Clasificación acumulada |
+
+### `transformers.py`
+
+Funciones puras que devuelven DataFrames limpios:
+
+| Función | Output CSV |
+|---|---|
+| `transform_events()` | `events.csv` |
+| `transform_stages()` | `*_stages.csv` |
+| `transform_entries()` | `*_entries.csv` |
+| `transform_stage_times()` | `*_stage_times.csv` |
+| `transform_overall_results()` | `*_overall.csv` |
+
+Conversiones aplicadas:
+- `elapsedDurationMs` → `time_s` (float) y `time_str` (HH:MM:SS.mmm)
+- `diffFirstMs` → `diff_first_s`
+- Ordenación por `position`
+- Casting de IDs a `int`
+
+---
+
+## CSVs generados
+
+Tras ejecutar el pipeline se crean en `data/processed/`:
+
+```
+events.csv                                   (3 filas)
+rallye_automobile_monte_carlo_stages.csv     (5 filas)
+rallye_automobile_monte_carlo_entries.csv    (6 filas)
+rallye_automobile_monte_carlo_stage_times.csv (30 filas = 5 etapas × 6 pilotos)
+rallye_automobile_monte_carlo_overall.csv    (30 filas = 5 etapas × 6 pilotos)
+```
+
+---
+
+## Lecciones del Bloque 1
+
+| Problema | Causa | Solución |
+|---|---|---|
+| `api.wrc.com` no resuelve | Dominio dado de baja por WRC | Mock data con estructura idéntica |
+| `WRC_USE_MOCK` no se lee desde `.env` | `load_dotenv()` se ejecuta después de que `os.getenv()` ya se evaluó | Pasar la variable directamente: `WRC_USE_MOCK=true python -m ingestion.pipeline` |
+| Archivos del zip no reemplazan los existentes | Windows no sobreescribe al descomprimir si no se confirma | Confirmar sobreescritura al descomprimir, o copiar archivos manualmente |
+
+---
+
+## Validaciones completadas
+
+```
+V1 — 22/22 tests passed              ✅
+V2 — Pipeline ejecutado con mock     ✅
+V3 — events.csv generado             ✅
+V4 — *_stages.csv generado           ✅
+V5 — *_stage_times.csv generado      ✅
+V6 — *_overall.csv generado          ✅
+```
+
+---
+
+*Siguiente: Bloque 2 — Backend FastAPI con endpoints REST.*
+````
+
+## File: docs/bloque-02-backend.md
+````markdown
+# Bloque 2 — Backend FastAPI
+
+## Lecciones del Bloque 1
+
+| Problema | Causa | Solución |
+|---|---|---|
+| `api.wrc.com` no resuelve | Dominio dado de baja por WRC | Mock data con estructura idéntica |
+| `WRC_USE_MOCK` no se lee desde `.env` | `os.getenv()` se evalúa antes de `load_dotenv()` | Pasar la variable inline: `WRC_USE_MOCK=true python -m ingestion.pipeline` |
+| Archivos del zip no reemplazan los existentes | Windows no sobreescribe sin confirmación | Copiar archivos manualmente en VSCode |
+
+---
+
+## Objetivo
+
+Construir el backend REST con FastAPI que expone los datos procesados del Bloque 1
+como endpoints JSON, con validación Pydantic, documentación Swagger automática y tests.
+
+---
+
+## Archivos creados / modificados
+
+```
+backend/
+├── app/
+│   ├── main.py                    ← modificado: añadidos los 3 routers
+│   ├── models/
+│   │   └── schemas.py             ← nuevo: todos los modelos Pydantic
+│   ├── services/
+│   │   ├── data_loader.py         ← nuevo: carga y caché de CSVs
+│   │   └── analytics.py          ← nuevo: lógica de negocio
+│   └── routers/
+│       ├── rally.py               ← nuevo: endpoints de eventos
+│       ├── stages.py              ← nuevo: endpoints de etapas
+│       └── drivers.py             ← nuevo: endpoints de pilotos
+└── tests/
+    └── test_api.py                ← nuevo: 35 tests de endpoints
+
+requirements.txt                   ← añadido pydantic-settings==2.3.0
+```
+
+---
+
+## Arquitectura del backend
+
+```
+CSV (data/processed/)
+        │
+        ▼
+data_loader.py      → carga DataFrames con lru_cache (singleton)
+        │
+        ▼
+analytics.py        → cálculos: clasificación final, evolución, comparativa
+        │
+        ▼
+routers/            → endpoints REST con validación Pydantic
+        │
+        ▼
+Swagger /docs       → documentación automática
+```
+
+---
+
+## Endpoints disponibles
+
+### Status
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/health` | Estado de la API |
+
+### Rallies
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/rallies/` | Lista de todos los rallies de la temporada |
+| GET | `/rallies/{event_id}` | Detalle de un rally concreto |
+
+### Stages
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/stages/` | Lista de todas las etapas |
+| GET | `/stages/{stage_id}/times` | Tiempos de todos los pilotos en una etapa |
+
+### Drivers
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/drivers/` | Lista de pilotos inscritos |
+| GET | `/drivers/classification` | Clasificación general final |
+| GET | `/drivers/evolution` | Evolución de posición de todos los pilotos |
+| GET | `/drivers/compare?entry_a=X&entry_b=Y` | Comparativa entre dos pilotos |
+
+---
+
+## Modelos Pydantic (schemas.py)
+
+| Schema | Descripción |
+|---|---|
+| `EventSummary` | Resumen de un rally (id, nombre, país, fechas) |
+| `Stage` | Etapa (id, código, nombre, distancia, superficie) |
+| `Driver` | Piloto (id, nombre, copiloto, fabricante, número) |
+| `StageTimeEntry` | Tiempo de un piloto en una etapa con datos enriquecidos |
+| `StageResult` | Resultado completo de una etapa (lista de StageTimeEntry) |
+| `OverallEntry` | Posición en clasificación general |
+| `OverallClassification` | Clasificación general completa |
+| `DriverEvolution` | Evolución de posición etapa a etapa |
+| `DriverComparison` | Comparativa de tiempos entre dos pilotos |
+
+---
+
+## Servicios
+
+### `data_loader.py`
+- Carga los CSVs de `data/processed/` con `pd.read_csv()`
+- Usa `@lru_cache` para cargar cada CSV solo una vez (singleton en memoria)
+- `get_stage_times_enriched()` y `get_overall_enriched()` hacen join con entries
+- `clear_cache()` limpia la caché (usado en tests)
+
+### `analytics.py`
+- `get_stage_result(stage_id)` → tiempos de una etapa ordenados por posición
+- `get_overall_at_stage(stage_id)` → clasificación acumulada en una etapa
+- `get_final_classification()` → clasificación tras la última etapa
+- `get_driver_evolution(entry_id)` → posiciones de un piloto etapa a etapa
+- `get_all_drivers_evolution()` → evolución de todos los pilotos (bump chart)
+- `get_driver_comparison(a, b)` → tiempos por etapa de dos pilotos
+
+---
+
+## Cómo probar la API manualmente
+
+Con la API arrancada (`uvicorn backend.app.main:app --reload`):
+
+```bash
+# Rallies
+curl http://localhost:8000/rallies/
+
+# Etapas
+curl http://localhost:8000/stages/
+
+# Tiempos de la SS1
+curl http://localhost:8000/stages/101/times
+
+# Clasificación final
+curl http://localhost:8000/drivers/classification
+
+# Evolución de posiciones
+curl http://localhost:8000/drivers/evolution
+
+# Comparativa Ogier (201) vs Evans (202)
+curl "http://localhost:8000/drivers/compare?entry_a=201&entry_b=202"
+```
+
+O desde Swagger UI: `http://localhost:8000/docs`
+
+---
+
+## Validaciones del Bloque 2
+
+### V1 — 57 tests pasan
+```bash
+pytest backend/tests/ -v
+→ 57 passed (22 anteriores + 35 nuevos)
+```
+
+### V2 — API arranca sin errores
+```bash
+uvicorn backend.app.main:app --reload
+→ Uvicorn running on http://0.0.0.0:8000
+```
+
+### V3 — Swagger visible
+```
+http://localhost:8000/docs
+→ 8 endpoints documentados en 3 secciones
+```
+
+### V4 — /rallies/ devuelve datos
+```
+http://localhost:8000/rallies/
+→ Lista de 3 rallies en JSON
+```
+
+### V5 — /stages/101/times devuelve 6 pilotos
+```
+http://localhost:8000/stages/101/times
+→ entries con 6 pilotos, con driver_name y manufacturer
+```
+
+### V6 — /drivers/classification devuelve clasificación final
+```
+http://localhost:8000/drivers/classification
+→ 6 pilotos ordenados, líder con diff_first_s=0.0
+```
+
+### V7 — /drivers/compare funciona
+```
+http://localhost:8000/drivers/compare?entry_a=201&entry_b=202
+→ Ogier vs Evans con 5 tiempos de etapa cada uno
+```
+
+---
+
+## Posibles errores comunes
+
+| Error | Causa | Solución |
+|---|---|---|
+| `ModuleNotFoundError: pydantic_settings` | Falta en requirements.txt | `pip install pydantic-settings==2.3.0` |
+| `CSV no encontrado` en logs | No se ejecutó el pipeline del Bloque 1 | `WRC_USE_MOCK=true python -m ingestion.pipeline` |
+| `422 Unprocessable Entity` | Parámetros de query incorrectos | Revisar los tipos en la URL |
+| `404` en `/drivers/compare` | entry_id no existe | Usar IDs válidos: 201-206 |
+
+---
+
+*Siguiente: Bloque 3 — Dashboard Streamlit con gráficos Plotly.*
+````
+
+## File: docs/bloque-03-dashboard.md
+````markdown
+# Bloque 3 — Dashboard Streamlit
+
+## Lecciones del Bloque 2
+
+| Problema | Causa | Solución |
+|---|---|---|
+| `pydantic-settings` no estaba en `requirements.txt` | Se usaba en `config.py` pero faltaba la dependencia | Añadido `pydantic-settings==2.3.0` al `requirements.txt` |
+| Archivos del zip no reemplazan los existentes | Windows no sobreescribe sin confirmación | Copiar archivos manualmente en VSCode |
+
+---
+
+## Objetivo
+
+Construir el dashboard interactivo con Streamlit y Plotly que consume el backend
+del Bloque 2 y presenta los datos con gráficos interactivos y filtros dinámicos.
+
+---
+
+## Archivos creados / modificados
+
+```
+dashboard/
+├── app.py                          ← modificado: página overview completa
+├── components/
+│   ├── api_client.py               ← nuevo: cliente HTTP al backend
+│   └── charts.py                  ← nuevo: gráficos Plotly reutilizables
+└── pages/
+    ├── 01_stages.py               ← nuevo: página de etapas
+    ├── 02_evolution.py            ← nuevo: página de evolución
+    └── 03_compare.py              ← nuevo: página de comparativa
+
+docs/
+└── bloque-03-dashboard.md         ← este archivo
+```
+
+---
+
+## Arquitectura del dashboard
+
+```
+FastAPI (localhost:8000)
+        │  HTTP/JSON
+        ▼
+api_client.py       → encapsula todas las llamadas al backend
+        │  dicts/listas Python
+        ▼
+pages/*.py          → lógica de UI y transformación a DataFrames
+        │  DataFrames Pandas
+        ▼
+charts.py           → funciones Plotly → figuras
+        │  go.Figure
+        ▼
+st.plotly_chart()   → renderizado en el navegador
+```
+
+---
+
+## Páginas del dashboard
+
+### 🏠 Overview (`app.py`)
+- KPIs: nombre del rally, país, nº etapas, nº pilotos
+- Tabla de clasificación general final con gaps
+- Resumen por fabricante
+- Podio (Top 3)
+
+### ⏱️ Etapas (`pages/01_stages.py`)
+- Selector dinámico de etapa (código + nombre + distancia)
+- KPIs de la etapa: código, distancia, superficie
+- Bar chart horizontal con tiempos, coloreado por fabricante
+- Gap vs líder anotado en cada barra
+- Tabla detallada con gap vs líder y gap vs anterior
+
+### 📈 Evolución (`pages/02_evolution.py`)
+- Multiselect de pilotos (filtro dinámico)
+- Bump chart: posición de cada piloto etapa a etapa (eje Y invertido)
+- Gap chart: gap acumulado respecto al líder
+- Tabla pivot de posiciones por etapa
+
+### 🔀 Comparativa (`pages/03_compare.py`)
+- Dos selectores de piloto
+- KPIs: etapas ganadas por cada piloto
+- Grouped bar chart con tiempos por etapa de ambos pilotos
+- Tabla detallada con diferencia por etapa y ganador
+
+---
+
+## Componentes reutilizables
+
+### `charts.py`
+
+| Función | Gráfico | Descripción |
+|---|---|---|
+| `create_stage_times_chart()` | Bar horizontal | Tiempos de etapa con gap anotado |
+| `create_gap_evolution_chart()` | Line chart | Gap acumulado respecto al líder |
+| `create_position_evolution_chart()` | Bump chart | Posición etapa a etapa |
+| `create_comparison_chart()` | Grouped bar | Tiempos de dos pilotos |
+
+Todas las funciones reciben un DataFrame y devuelven un `go.Figure`.
+Los colores se asignan por fabricante (Toyota=rojo, Hyundai=azul).
+
+### `api_client.py`
+
+Encapsula todas las llamadas HTTP al backend. Si la API no está disponible,
+devuelve listas/dicts vacíos en lugar de lanzar excepciones.
+
+---
+
+## Cómo ejecutar el dashboard
+
+Con el backend ya corriendo en el terminal 1:
+
+```bash
+# Terminal 2 — desde la raíz del proyecto
+streamlit run dashboard/app.py
+```
+
+Abre → `http://localhost:8501`
+
+---
+
+## Validaciones del Bloque 3
+
+### V1 — Dashboard arranca sin errores
+```
+streamlit run dashboard/app.py
+→ http://localhost:8501 visible en el navegador
+```
+
+### V2 — Overview muestra clasificación
+```
+http://localhost:8501
+→ Tabla con 6 pilotos, KPIs del rally visibles
+```
+
+### V3 — Página Etapas funciona
+```
+http://localhost:8501/01_stages
+→ Selector de etapa + bar chart + tabla
+```
+
+### V4 — Página Evolución funciona
+```
+http://localhost:8501/02_evolution
+→ Bump chart y gap chart visibles
+→ Filtro multiselect de pilotos reactivo
+```
+
+### V5 — Página Comparativa funciona
+```
+http://localhost:8501/03_compare
+→ Selectores de piloto + grouped bar chart + tabla
+```
+
+---
+
+## Posibles errores comunes
+
+| Error | Causa | Solución |
+|---|---|---|
+| `⚠️ No se puede conectar con la API` | FastAPI no está corriendo | Arrancar con `uvicorn backend.app.main:app --reload` |
+| `ModuleNotFoundError: dashboard` | Streamlit no encuentra el módulo | Ejecutar desde la raíz del proyecto |
+| Gráfico vacío | `df` está vacío | Verificar que se ejecutó el pipeline del Bloque 1 |
+| `st.page_link` error | Versión de Streamlit antigua | Verificar `streamlit==1.35.0` |
+
+---
+
+*Siguiente: Bloque 4 — Gráficos avanzados y pulido visual.*
+````
+
+## File: ingestion/__init__.py
+````python
+
+````
+
+## File: ingestion/mock_data.py
+````python
+"""
+Datos mock basados en la estructura real de la WRC Live Timing API.
+
+Simulan el Rally Monte Carlo 2024 con 6 pilotos y 5 etapas.
+Se usan cuando la API real no está accesible (red corporativa, desarrollo offline).
+"""
+
+from __future__ import annotations
+
+# ── Temporada activa ──────────────────────────────────────────────────────────
+MOCK_SEASON: dict = {
+    "rallyEvents": {
+        "items": [
+            {
+                "id": 1,
+                "name": "Rallye Automobile Monte Carlo",
+                "status": "Completed",
+                "rally": {
+                    "country": {"name": "France", "iso2": "FR", "iso3": "FRA"}
+                },
+                "eventDays": [
+                    {"startDate": "2024-01-25T00:00:00"},
+                    {"startDate": "2024-01-26T00:00:00"},
+                    {"startDate": "2024-01-27T00:00:00"},
+                    {"finishDate": "2024-01-28T00:00:00"},
+                ],
+                "winner": {"driver": {"fullName": "Sébastien Ogier"}},
+            },
+            {
+                "id": 2,
+                "name": "Rally Sweden",
+                "status": "Completed",
+                "rally": {
+                    "country": {"name": "Sweden", "iso2": "SE", "iso3": "SWE"}
+                },
+                "eventDays": [
+                    {"startDate": "2024-02-15T00:00:00"},
+                    {"finishDate": "2024-02-18T00:00:00"},
+                ],
+                "winner": {"driver": {"fullName": "Elfyn Evans"}},
+            },
+            {
+                "id": 3,
+                "name": "Safari Rally Kenya",
+                "status": "Completed",
+                "rally": {
+                    "country": {"name": "Kenya", "iso2": "KE", "iso3": "KEN"}
+                },
+                "eventDays": [
+                    {"startDate": "2024-03-28T00:00:00"},
+                    {"finishDate": "2024-03-31T00:00:00"},
+                ],
+                "winner": {"driver": {"fullName": "Thierry Neuville"}},
+            },
+        ]
+    }
+}
+
+# ── Itinerario (Monte Carlo) ───────────────────────────────────────────────────
+MOCK_ITINERARY: dict = {
+    "rallyId": 1,
+    "itineraryLegs": [
+        {
+            "itineraryLegId": 10,
+            "name": "Leg 1",
+            "startListId": 100,
+            "itinerarySections": [
+                {
+                    "itinerarySectionId": 20,
+                    "stages": [
+                        {
+                            "stageId": 101,
+                            "code": "SS1",
+                            "name": "Col de Turini",
+                            "distance": 18.55,
+                            "stageType": "Tarmac",
+                            "status": "Completed",
+                        },
+                        {
+                            "stageId": 102,
+                            "code": "SS2",
+                            "name": "La Cabanette - Col de Braus",
+                            "distance": 12.3,
+                            "stageType": "Tarmac",
+                            "status": "Completed",
+                        },
+                    ],
+                }
+            ],
+        },
+        {
+            "itineraryLegId": 11,
+            "name": "Leg 2",
+            "startListId": 101,
+            "itinerarySections": [
+                {
+                    "itinerarySectionId": 21,
+                    "stages": [
+                        {
+                            "stageId": 103,
+                            "code": "SS3",
+                            "name": "Lucéram - Lantosque",
+                            "distance": 22.1,
+                            "stageType": "Tarmac",
+                            "status": "Completed",
+                        },
+                        {
+                            "stageId": 104,
+                            "code": "SS4",
+                            "name": "Saint-Léger - Escragnolles",
+                            "distance": 15.8,
+                            "stageType": "Tarmac",
+                            "status": "Completed",
+                        },
+                    ],
+                }
+            ],
+        },
+        {
+            "itineraryLegId": 12,
+            "name": "Leg 3",
+            "startListId": 102,
+            "itinerarySections": [
+                {
+                    "itinerarySectionId": 22,
+                    "stages": [
+                        {
+                            "stageId": 105,
+                            "code": "SS5",
+                            "name": "Col de Turini (Power Stage)",
+                            "distance": 18.55,
+                            "stageType": "Tarmac",
+                            "status": "Completed",
+                        },
+                    ],
+                }
+            ],
+        },
+    ],
+}
+
+# ── Pilotos inscritos ─────────────────────────────────────────────────────────
+MOCK_ENTRIES: list[dict] = [
+    {
+        "entryId": 201,
+        "identifier": "17",
+        "driver": {"fullName": "Sébastien Ogier", "code": "OGI", "country": {"iso2": "FR"}},
+        "codriver": {"fullName": "Vincent Landais"},
+        "manufacturer": {"name": "Toyota"},
+        "group": {"name": "WRC"},
+    },
+    {
+        "entryId": 202,
+        "identifier": "33",
+        "driver": {"fullName": "Elfyn Evans", "code": "EVA", "country": {"iso2": "GB"}},
+        "codriver": {"fullName": "Scott Martin"},
+        "manufacturer": {"name": "Toyota"},
+        "group": {"name": "WRC"},
+    },
+    {
+        "entryId": 203,
+        "identifier": "11",
+        "driver": {"fullName": "Thierry Neuville", "code": "NEU", "country": {"iso2": "BE"}},
+        "codriver": {"fullName": "Martijn Wydaeghe"},
+        "manufacturer": {"name": "Hyundai"},
+        "group": {"name": "WRC"},
+    },
+    {
+        "entryId": 204,
+        "identifier": "6",
+        "driver": {"fullName": "Ott Tänak", "code": "TAN", "country": {"iso2": "EE"}},
+        "codriver": {"fullName": "Martin Järveoja"},
+        "manufacturer": {"name": "Hyundai"},
+        "group": {"name": "WRC"},
+    },
+    {
+        "entryId": 205,
+        "identifier": "69",
+        "driver": {"fullName": "Kalle Rovanperä", "code": "ROV", "country": {"iso2": "FI"}},
+        "codriver": {"fullName": "Jonne Halttunen"},
+        "manufacturer": {"name": "Toyota"},
+        "group": {"name": "WRC"},
+    },
+    {
+        "entryId": 206,
+        "identifier": "8",
+        "driver": {"fullName": "Ott Tänak", "code": "TAN", "country": {"iso2": "EE"}},
+        "codriver": {"fullName": "Andreas Mikkelsen"},
+        "manufacturer": {"name": "Hyundai"},
+        "group": {"name": "WRC"},
+    },
+]
+
+# ── Tiempos por etapa ─────────────────────────────────────────────────────────
+# Formato: stage_id → lista de tiempos
+# Tiempos en milisegundos, basados en ritmos reales del WRC (~1 min/km en tarmac)
+
+MOCK_STAGE_TIMES: dict[int, list[dict]] = {
+    101: [  # SS1 — Col de Turini (18.55 km) → ~14 min
+        {"entryId": 201, "position": 1, "elapsedDurationMs": 834_500, "diffFirstMs": 0,     "diffPrevMs": 0,    "status": "Completed"},
+        {"entryId": 202, "position": 2, "elapsedDurationMs": 836_200, "diffFirstMs": 1_700, "diffPrevMs": 1_700, "status": "Completed"},
+        {"entryId": 203, "position": 3, "elapsedDurationMs": 837_800, "diffFirstMs": 3_300, "diffPrevMs": 1_600, "status": "Completed"},
+        {"entryId": 205, "position": 4, "elapsedDurationMs": 839_100, "diffFirstMs": 4_600, "diffPrevMs": 1_300, "status": "Completed"},
+        {"entryId": 204, "position": 5, "elapsedDurationMs": 841_000, "diffFirstMs": 6_500, "diffPrevMs": 1_900, "status": "Completed"},
+        {"entryId": 206, "position": 6, "elapsedDurationMs": 844_300, "diffFirstMs": 9_800, "diffPrevMs": 3_300, "status": "Completed"},
+    ],
+    102: [  # SS2 — La Cabanette (12.3 km) → ~9.5 min
+        {"entryId": 203, "position": 1, "elapsedDurationMs": 572_000, "diffFirstMs": 0,     "diffPrevMs": 0,    "status": "Completed"},
+        {"entryId": 201, "position": 2, "elapsedDurationMs": 573_500, "diffFirstMs": 1_500, "diffPrevMs": 1_500, "status": "Completed"},
+        {"entryId": 205, "position": 3, "elapsedDurationMs": 575_200, "diffFirstMs": 3_200, "diffPrevMs": 1_700, "status": "Completed"},
+        {"entryId": 202, "position": 4, "elapsedDurationMs": 577_400, "diffFirstMs": 5_400, "diffPrevMs": 2_200, "status": "Completed"},
+        {"entryId": 204, "position": 5, "elapsedDurationMs": 579_800, "diffFirstMs": 7_800, "diffPrevMs": 2_400, "status": "Completed"},
+        {"entryId": 206, "position": 6, "elapsedDurationMs": 583_100, "diffFirstMs": 11_100,"diffPrevMs": 3_300, "status": "Completed"},
+    ],
+    103: [  # SS3 — Lucéram (22.1 km) → ~17 min
+        {"entryId": 201, "position": 1, "elapsedDurationMs": 1_018_000, "diffFirstMs": 0,      "diffPrevMs": 0,     "status": "Completed"},
+        {"entryId": 203, "position": 2, "elapsedDurationMs": 1_020_500, "diffFirstMs": 2_500,  "diffPrevMs": 2_500, "status": "Completed"},
+        {"entryId": 202, "position": 3, "elapsedDurationMs": 1_022_100, "diffFirstMs": 4_100,  "diffPrevMs": 1_600, "status": "Completed"},
+        {"entryId": 205, "position": 4, "elapsedDurationMs": 1_025_300, "diffFirstMs": 7_300,  "diffPrevMs": 3_200, "status": "Completed"},
+        {"entryId": 204, "position": 5, "elapsedDurationMs": 1_028_700, "diffFirstMs": 10_700, "diffPrevMs": 3_400, "status": "Completed"},
+        {"entryId": 206, "position": 6, "elapsedDurationMs": 1_034_200, "diffFirstMs": 16_200, "diffPrevMs": 5_500, "status": "Completed"},
+    ],
+    104: [  # SS4 — Saint-Léger (15.8 km) → ~12 min
+        {"entryId": 202, "position": 1, "elapsedDurationMs": 731_200, "diffFirstMs": 0,      "diffPrevMs": 0,     "status": "Completed"},
+        {"entryId": 201, "position": 2, "elapsedDurationMs": 732_800, "diffFirstMs": 1_600,  "diffPrevMs": 1_600, "status": "Completed"},
+        {"entryId": 205, "position": 3, "elapsedDurationMs": 734_500, "diffFirstMs": 3_300,  "diffPrevMs": 1_700, "status": "Completed"},
+        {"entryId": 203, "position": 4, "elapsedDurationMs": 736_000, "diffFirstMs": 4_800,  "diffPrevMs": 1_500, "status": "Completed"},
+        {"entryId": 204, "position": 5, "elapsedDurationMs": 739_400, "diffFirstMs": 8_200,  "diffPrevMs": 3_400, "status": "Completed"},
+        {"entryId": 206, "position": 6, "elapsedDurationMs": 743_100, "diffFirstMs": 11_900, "diffPrevMs": 3_700, "status": "Completed"},
+    ],
+    105: [  # SS5 — Power Stage (18.55 km) → ~14 min
+        {"entryId": 205, "position": 1, "elapsedDurationMs": 828_300, "diffFirstMs": 0,     "diffPrevMs": 0,    "status": "Completed"},
+        {"entryId": 201, "position": 2, "elapsedDurationMs": 829_700, "diffFirstMs": 1_400, "diffPrevMs": 1_400, "status": "Completed"},
+        {"entryId": 203, "position": 3, "elapsedDurationMs": 831_200, "diffFirstMs": 2_900, "diffPrevMs": 1_500, "status": "Completed"},
+        {"entryId": 202, "position": 4, "elapsedDurationMs": 833_800, "diffFirstMs": 5_500, "diffPrevMs": 2_600, "status": "Completed"},
+        {"entryId": 204, "position": 5, "elapsedDurationMs": 836_500, "diffFirstMs": 8_200, "diffPrevMs": 2_700, "status": "Completed"},
+        {"entryId": 206, "position": 6, "elapsedDurationMs": 841_000, "diffFirstMs": 12_700,"diffPrevMs": 4_500, "status": "Completed"},
+    ],
+}
+
+# ── Clasificación general acumulada ───────────────────────────────────────────
+# Calculada acumulando los tiempos de etapa
+
+MOCK_OVERALL: dict[int, list[dict]] = {
+    101: [  # Tras SS1
+        {"entryId": 201, "position": 1, "totalTimeMs": 834_500,   "diffFirstMs": 0,     "penaltyTimeMs": 0},
+        {"entryId": 202, "position": 2, "totalTimeMs": 836_200,   "diffFirstMs": 1_700, "penaltyTimeMs": 0},
+        {"entryId": 203, "position": 3, "totalTimeMs": 837_800,   "diffFirstMs": 3_300, "penaltyTimeMs": 0},
+        {"entryId": 205, "position": 4, "totalTimeMs": 839_100,   "diffFirstMs": 4_600, "penaltyTimeMs": 0},
+        {"entryId": 204, "position": 5, "totalTimeMs": 841_000,   "diffFirstMs": 6_500, "penaltyTimeMs": 0},
+        {"entryId": 206, "position": 6, "totalTimeMs": 844_300,   "diffFirstMs": 9_800, "penaltyTimeMs": 0},
+    ],
+    102: [  # Tras SS2
+        {"entryId": 201, "position": 1, "totalTimeMs": 1_408_000, "diffFirstMs": 0,      "penaltyTimeMs": 0},
+        {"entryId": 203, "position": 2, "totalTimeMs": 1_409_800, "diffFirstMs": 1_800,  "penaltyTimeMs": 0},
+        {"entryId": 202, "position": 3, "totalTimeMs": 1_413_600, "diffFirstMs": 5_600,  "penaltyTimeMs": 0},
+        {"entryId": 205, "position": 4, "totalTimeMs": 1_414_300, "diffFirstMs": 6_300,  "penaltyTimeMs": 0},
+        {"entryId": 204, "position": 5, "totalTimeMs": 1_420_800, "diffFirstMs": 12_800, "penaltyTimeMs": 0},
+        {"entryId": 206, "position": 6, "totalTimeMs": 1_427_400, "diffFirstMs": 19_400, "penaltyTimeMs": 0},
+    ],
+    103: [  # Tras SS3
+        {"entryId": 201, "position": 1, "totalTimeMs": 2_426_000, "diffFirstMs": 0,      "penaltyTimeMs": 0},
+        {"entryId": 203, "position": 2, "totalTimeMs": 2_430_300, "diffFirstMs": 4_300,  "penaltyTimeMs": 0},
+        {"entryId": 202, "position": 3, "totalTimeMs": 2_435_700, "diffFirstMs": 9_700,  "penaltyTimeMs": 0},
+        {"entryId": 205, "position": 4, "totalTimeMs": 2_439_600, "diffFirstMs": 13_600, "penaltyTimeMs": 0},
+        {"entryId": 204, "position": 5, "totalTimeMs": 2_449_500, "diffFirstMs": 23_500, "penaltyTimeMs": 0},
+        {"entryId": 206, "position": 6, "totalTimeMs": 2_461_600, "diffFirstMs": 35_600, "penaltyTimeMs": 0},
+    ],
+    104: [  # Tras SS4
+        {"entryId": 201, "position": 1, "totalTimeMs": 3_158_800, "diffFirstMs": 0,      "penaltyTimeMs": 0},
+        {"entryId": 203, "position": 2, "totalTimeMs": 3_166_300, "diffFirstMs": 7_500,  "penaltyTimeMs": 0},
+        {"entryId": 202, "position": 3, "totalTimeMs": 3_166_900, "diffFirstMs": 8_100,  "penaltyTimeMs": 0},
+        {"entryId": 205, "position": 4, "totalTimeMs": 3_174_100, "diffFirstMs": 15_300, "penaltyTimeMs": 0},
+        {"entryId": 204, "position": 5, "totalTimeMs": 3_188_900, "diffFirstMs": 30_100, "penaltyTimeMs": 0},
+        {"entryId": 206, "position": 6, "totalTimeMs": 3_204_700, "diffFirstMs": 45_900, "penaltyTimeMs": 0},
+    ],
+    105: [  # Tras SS5 — Clasificación final
+        {"entryId": 201, "position": 1, "totalTimeMs": 3_988_500, "diffFirstMs": 0,      "penaltyTimeMs": 0},
+        {"entryId": 203, "position": 2, "totalTimeMs": 3_997_500, "diffFirstMs": 9_000,  "penaltyTimeMs": 0},
+        {"entryId": 202, "position": 3, "totalTimeMs": 4_000_700, "diffFirstMs": 12_200, "penaltyTimeMs": 0},
+        {"entryId": 205, "position": 4, "totalTimeMs": 4_002_400, "diffFirstMs": 13_900, "penaltyTimeMs": 0},
+        {"entryId": 204, "position": 5, "totalTimeMs": 4_025_400, "diffFirstMs": 36_900, "penaltyTimeMs": 0},
+        {"entryId": 206, "position": 6, "totalTimeMs": 4_045_700, "diffFirstMs": 57_200, "penaltyTimeMs": 0},
+    ],
+}
+````
+
+## File: ingestion/pipeline.py
+````python
+"""
+Pipeline de ingesta de datos WRC.
+
+Uso:
+    python -m ingestion.pipeline                  # descarga temporada activa
+    python -m ingestion.pipeline --event-id 123   # descarga un evento concreto
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import logging
+import sys
+from pathlib import Path
+
+import pandas as pd
+
+from ingestion import wrc_client as client
+from ingestion import transformers as tr
+
+# ── Logging ───────────────────────────────────────────────────────────────────
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s — %(message)s",
+    datefmt="%H:%M:%S",
+)
+logger = logging.getLogger("ingestion.pipeline")
+
+# ── Paths ─────────────────────────────────────────────────────────────────────
+_PROJECT_ROOT = Path(__file__).resolve().parents[1]
+RAW_DIR = _PROJECT_ROOT / "data" / "raw"
+PROCESSED_DIR = _PROJECT_ROOT / "data" / "processed"
+
+
+def _save_json(data: object, path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    logger.info("JSON guardado → %s", path.name)
+
+
+def _save_csv(df: pd.DataFrame, path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    df.to_csv(path, index=False, encoding="utf-8-sig")
+    logger.info("CSV guardado → %s (%d filas)", path.name, len(df))
+
+
+# ── Pasos del pipeline ────────────────────────────────────────────────────────
+
+def step_season() -> list[dict]:
+    """Paso 1: descarga y guarda los eventos de la temporada activa."""
+    logger.info("── Paso 1: temporada activa ──")
+    events = client.get_active_season()
+    _save_json(events, RAW_DIR / "season_events.json")
+    df = tr.transform_events(events)
+    _save_csv(df, PROCESSED_DIR / "events.csv")
+    return events
+
+
+def step_event(event_id: int, event_name: str) -> None:
+    """Paso 2: descarga y procesa un evento completo."""
+    logger.info("── Paso 2: evento %d (%s) ──", event_id, event_name)
+    safe_name = event_name.lower().replace(" ", "_")[:30]
+
+    # — Itinerario + etapas —
+    logger.info("  Descargando itinerario...")
+    itinerary = client.get_itinerary(event_id)
+    _save_json(itinerary, RAW_DIR / f"{safe_name}_itinerary.json")
+    stages_df = tr.transform_stages(itinerary)
+    _save_csv(stages_df, PROCESSED_DIR / f"{safe_name}_stages.csv")
+
+    if stages_df.empty:
+        logger.warning("  No se encontraron etapas para este evento.")
+        return
+
+    # — Entradas (pilotos) —
+    logger.info("  Descargando pilotos...")
+    try:
+        entries = client.get_entries(event_id)
+        _save_json(entries, RAW_DIR / f"{safe_name}_entries.json")
+        entries_df = tr.transform_entries(entries)
+        _save_csv(entries_df, PROCESSED_DIR / f"{safe_name}_entries.csv")
+    except Exception as e:
+        logger.warning("  No se pudieron descargar pilotos: %s", e)
+        entries_df = pd.DataFrame()
+
+    # — Tiempos de cada etapa —
+    all_stage_times: list[pd.DataFrame] = []
+    all_overall: list[pd.DataFrame] = []
+
+    stage_ids = stages_df["stage_id"].tolist()
+    logger.info("  Descargando tiempos de %d etapas...", len(stage_ids))
+
+    for stage_id in stage_ids:
+        stage_code = stages_df.loc[
+            stages_df["stage_id"] == stage_id, "stage_code"
+        ].values[0]
+        logger.info("    Etapa %s (id=%d)...", stage_code, stage_id)
+
+        try:
+            raw_times = client.get_stage_times(event_id, stage_id)
+            if raw_times:
+                df_times = tr.transform_stage_times(raw_times, stage_id, event_id)
+                df_times["stage_code"] = stage_code
+                all_stage_times.append(df_times)
+        except Exception as e:
+            logger.warning("    stage_times %d fallido: %s", stage_id, e)
+
+        try:
+            raw_overall = client.get_overall_results(event_id, stage_id)
+            if raw_overall:
+                df_overall = tr.transform_overall_results(raw_overall, stage_id, event_id)
+                df_overall["stage_code"] = stage_code
+                all_overall.append(df_overall)
+        except Exception as e:
+            logger.warning("    overall %d fallido: %s", stage_id, e)
+
+    # — Guardar consolidados —
+    if all_stage_times:
+        stage_times_df = pd.concat(all_stage_times, ignore_index=True)
+        _save_csv(stage_times_df, PROCESSED_DIR / f"{safe_name}_stage_times.csv")
+
+    if all_overall:
+        overall_df = pd.concat(all_overall, ignore_index=True)
+        _save_csv(overall_df, PROCESSED_DIR / f"{safe_name}_overall.csv")
+
+    logger.info("  Evento %s completado.", event_name)
+
+
+def run(event_id: int | None = None) -> None:
+    """Punto de entrada principal del pipeline."""
+    logger.info("═══ Rally Performance Analyzer — Pipeline de ingesta ═══")
+
+    events = step_season()
+
+    if not events:
+        logger.error("No se encontraron eventos en la temporada activa.")
+        sys.exit(1)
+
+    # Si se especifica un evento concreto, solo descargamos ese
+    if event_id is not None:
+        match = [e for e in events if e.get("id") == event_id]
+        if not match:
+            logger.error("Evento %d no encontrado en la temporada activa.", event_id)
+            sys.exit(1)
+        targets = match
+    else:
+        # Por defecto: solo el primer evento completado (status=Completed)
+        completed = [e for e in events if e.get("status") == "Completed"]
+        targets = completed[:1] if completed else events[:1]
+
+    for event in targets:
+        eid = event.get("id")
+        ename = event.get("name", f"event_{eid}")
+        step_event(eid, ename)
+
+    logger.info("═══ Pipeline finalizado ═══")
+
+
+# ── CLI ───────────────────────────────────────────────────────────────────────
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="WRC data ingestion pipeline")
+    parser.add_argument(
+        "--event-id",
+        type=int,
+        default=None,
+        help="ID del evento a descargar (por defecto: primer evento completado)",
+    )
+    args = parser.parse_args()
+    run(event_id=args.event_id)
+````
+
+## File: ingestion/transformers.py
+````python
+"""
+Transformadores de datos WRC.
+
+Reciben dicts/listas crudos de la API y devuelven
+DataFrames de Pandas limpios y normalizados.
+"""
+
+from __future__ import annotations
+
+import logging
+
+import pandas as pd
+
+logger = logging.getLogger(__name__)
+
+
+# ── Helpers ──────────────────────────────────────────────────────────────────
+
+def _ms_to_seconds(ms: int | None) -> float | None:
+    """Convierte milisegundos a segundos con 3 decimales."""
+    if ms is None:
+        return None
+    return round(ms / 1000, 3)
+
+
+def _ms_to_timestr(ms: int | None) -> str | None:
+    """Convierte milisegundos a string legible HH:MM:SS.mmm"""
+    if ms is None:
+        return None
+    total_s = ms / 1000
+    hours = int(total_s // 3600)
+    minutes = int((total_s % 3600) // 60)
+    seconds = total_s % 60
+    return f"{hours:02d}:{minutes:02d}:{seconds:06.3f}"
+
+
+# ── Eventos ──────────────────────────────────────────────────────────────────
+
+def transform_events(raw_events: list[dict]) -> pd.DataFrame:
+    """
+    Normaliza la lista de eventos de la temporada.
+
+    Columnas: event_id, name, status, country, date_start, date_finish.
+    """
+    rows = []
+    for ev in raw_events:
+        rally = ev.get("rally", {})
+        days = ev.get("eventDays", [])
+        date_start = days[0].get("startDate", "") if days else ""
+        date_finish = days[-1].get("finishDate", "") if days else ""
+
+        rows.append({
+            "event_id": ev.get("id"),
+            "name": ev.get("name", ""),
+            "status": ev.get("status", ""),
+            "country": rally.get("country", {}).get("name", ""),
+            "country_iso": rally.get("country", {}).get("iso2", ""),
+            "date_start": date_start,
+            "date_finish": date_finish,
+        })
+
+    df = pd.DataFrame(rows)
+    logger.info("Eventos transformados: %d filas", len(df))
+    return df
+
+
+# ── Etapas ───────────────────────────────────────────────────────────────────
+
+def transform_stages(itinerary: dict) -> pd.DataFrame:
+    """
+    Extrae y aplana todas las etapas del itinerario.
+
+    Columnas: stage_id, stage_code, name, distance_km, surface, leg_name, day.
+    """
+    rows = []
+    legs = itinerary.get("itineraryLegs", [])
+
+    for leg in legs:
+        leg_name = leg.get("name", "")
+        day = leg.get("startListId", "")
+        sections = leg.get("itinerarySections", [])
+
+        for section in sections:
+            stages = section.get("stages", [])
+            for stage in stages:
+                rows.append({
+                    "stage_id": stage.get("stageId"),
+                    "stage_code": stage.get("code", ""),
+                    "name": stage.get("name", ""),
+                    "distance_km": stage.get("distance", 0.0),
+                    "surface": stage.get("stageType", ""),
+                    "leg_name": leg_name,
+                    "status": stage.get("status", ""),
+                })
+
+    df = pd.DataFrame(rows)
+    if not df.empty:
+        df = df.dropna(subset=["stage_id"])
+        df["stage_id"] = df["stage_id"].astype(int)
+    logger.info("Etapas transformadas: %d filas", len(df))
+    return df
+
+
+# ── Pilotos (entries) ────────────────────────────────────────────────────────
+
+def transform_entries(raw_entries: list[dict]) -> pd.DataFrame:
+    """
+    Normaliza la lista de pilotos inscritos.
+
+    Columnas: entry_id, driver_name, codriver_name, manufacturer,
+              car_number, group, nationality.
+    """
+    rows = []
+    for entry in raw_entries:
+        driver = entry.get("driver", {})
+        codriver = entry.get("codriver", {})
+        rows.append({
+            "entry_id": entry.get("entryId"),
+            "driver_name": driver.get("fullName", ""),
+            "driver_code": driver.get("code", ""),
+            "driver_nationality": driver.get("country", {}).get("iso2", ""),
+            "codriver_name": codriver.get("fullName", ""),
+            "manufacturer": entry.get("manufacturer", {}).get("name", ""),
+            "car_number": entry.get("identifier", ""),
+            "group": entry.get("group", {}).get("name", ""),
+        })
+
+    df = pd.DataFrame(rows)
+    if not df.empty:
+        df = df.dropna(subset=["entry_id"])
+        df["entry_id"] = df["entry_id"].astype(int)
+    logger.info("Pilotos transformados: %d filas", len(df))
+    return df
+
+
+# ── Tiempos de etapa ─────────────────────────────────────────────────────────
+
+def transform_stage_times(
+    raw_times: list[dict],
+    stage_id: int,
+    event_id: int,
+) -> pd.DataFrame:
+    """
+    Normaliza los tiempos de una etapa concreta.
+
+    Columnas: event_id, stage_id, entry_id, position,
+              time_ms, time_s, time_str, diff_first_ms, diff_first_s, status.
+    """
+    rows = []
+    for t in raw_times:
+        rows.append({
+            "event_id": event_id,
+            "stage_id": stage_id,
+            "entry_id": t.get("entryId"),
+            "position": t.get("position"),
+            "time_ms": t.get("elapsedDurationMs"),
+            "time_s": _ms_to_seconds(t.get("elapsedDurationMs")),
+            "time_str": _ms_to_timestr(t.get("elapsedDurationMs")),
+            "diff_first_ms": t.get("diffFirstMs"),
+            "diff_first_s": _ms_to_seconds(t.get("diffFirstMs")),
+            "diff_prev_ms": t.get("diffPrevMs"),
+            "diff_prev_s": _ms_to_seconds(t.get("diffPrevMs")),
+            "status": t.get("status", ""),
+        })
+
+    df = pd.DataFrame(rows)
+    if not df.empty:
+        df = df.dropna(subset=["entry_id"])
+        df["entry_id"] = df["entry_id"].astype(int)
+        df = df.sort_values("position").reset_index(drop=True)
+    logger.info(
+        "Stage times transformados: event=%d stage=%d → %d filas",
+        event_id, stage_id, len(df)
+    )
+    return df
+
+
+# ── Clasificación general ────────────────────────────────────────────────────
+
+def transform_overall_results(
+    raw_results: list[dict],
+    stage_id: int,
+    event_id: int,
+) -> pd.DataFrame:
+    """
+    Normaliza la clasificación general acumulada tras una etapa.
+
+    Columnas: event_id, stage_id, entry_id, position,
+              total_time_ms, total_time_s, total_time_str,
+              diff_first_ms, diff_first_s.
+    """
+    rows = []
+    for r in raw_results:
+        rows.append({
+            "event_id": event_id,
+            "stage_id": stage_id,
+            "entry_id": r.get("entryId"),
+            "position": r.get("position"),
+            "total_time_ms": r.get("totalTimeMs"),
+            "total_time_s": _ms_to_seconds(r.get("totalTimeMs")),
+            "total_time_str": _ms_to_timestr(r.get("totalTimeMs")),
+            "diff_first_ms": r.get("diffFirstMs"),
+            "diff_first_s": _ms_to_seconds(r.get("diffFirstMs")),
+            "status": r.get("penaltyTimeMs", "OK"),
+        })
+
+    df = pd.DataFrame(rows)
+    if not df.empty:
+        df = df.dropna(subset=["entry_id"])
+        df["entry_id"] = df["entry_id"].astype(int)
+        df = df.sort_values("position").reset_index(drop=True)
+    logger.info(
+        "Overall results transformados: event=%d stage=%d → %d filas",
+        event_id, stage_id, len(df)
+    )
+    return df
+````
+
+## File: ingestion/wrc_client.py
+````python
+"""
+Cliente HTTP para la WRC Live Timing API.
+
+Soporta dos modos controlados por la variable de entorno WRC_USE_MOCK:
+  - WRC_USE_MOCK=false (default)  → llamadas reales a api.wrc.com
+  - WRC_USE_MOCK=true             → datos mock locales (desarrollo offline)
+"""
+
+from __future__ import annotations
+
+import logging
+import os
+from typing import Any
+
+import httpx
+
+from ingestion import mock_data as mock
+
+logger = logging.getLogger(__name__)
+
+# ── Configuración ─────────────────────────────────────────────────────────────
+_SEASON_URL = "https://api.wrc.com/contel-page/83388/calendar/active-season/"
+_RESULTS_BASE = "https://api.wrc.com/results-api"
+_TIMEOUT = 15.0
+
+
+def _use_mock() -> bool:
+    """Devuelve True si WRC_USE_MOCK=true en el entorno o .env."""
+    return os.getenv("WRC_USE_MOCK", "false").lower() == "true"
+
+
+def _get(url: str, params: dict[str, Any] | None = None) -> Any:
+    """Realiza una petición GET y devuelve el JSON parseado."""
+    try:
+        response = httpx.get(url, params=params, timeout=_TIMEOUT)
+        response.raise_for_status()
+        return response.json()
+    except httpx.HTTPStatusError as e:
+        logger.error("HTTP error %s al llamar %s", e.response.status_code, url)
+        raise
+    except httpx.RequestError as e:
+        logger.error("Error de conexión al llamar %s: %s", url, e)
+        raise
+
+
+# ── Endpoints ─────────────────────────────────────────────────────────────────
+
+def get_active_season() -> list[dict]:
+    """Devuelve la lista de eventos de la temporada activa."""
+    if _use_mock():
+        logger.info("[MOCK] Cargando temporada activa desde mock_data")
+        items = mock.MOCK_SEASON["rallyEvents"]["items"]
+        logger.info("Temporada activa (mock): %d eventos", len(items))
+        return items
+
+    data = _get(_SEASON_URL)
+    items = data.get("rallyEvents", {}).get("items", [])
+    logger.info("Temporada activa: %d eventos encontrados", len(items))
+    return items
+
+
+def get_itinerary(event_id: int) -> dict:
+    """Devuelve el itinerario completo de un evento."""
+    if _use_mock():
+        logger.info("[MOCK] Cargando itinerario para event_id=%d", event_id)
+        return mock.MOCK_ITINERARY
+
+    url = f"{_RESULTS_BASE}/rally-event/{event_id}/itinerary"
+    return _get(url)
+
+
+def get_entries(event_id: int) -> list[dict]:
+    """Devuelve la lista de pilotos inscritos en un evento."""
+    if _use_mock():
+        logger.info("[MOCK] Cargando pilotos para event_id=%d", event_id)
+        return mock.MOCK_ENTRIES
+
+    url = f"{_RESULTS_BASE}/rally-event/{event_id}/cars"
+    return _get(url)
+
+
+def get_stage_times(event_id: int, stage_id: int) -> list[dict]:
+    """Devuelve los tiempos de todos los pilotos en una etapa concreta."""
+    if _use_mock():
+        logger.info("[MOCK] Cargando stage_times para stage_id=%d", stage_id)
+        return mock.MOCK_STAGE_TIMES.get(stage_id, [])
+
+    url = (
+        f"{_RESULTS_BASE}/rally-event/{event_id}"
+        f"/stage-times/stage-external/{stage_id}"
+    )
+    return _get(url)
+
+
+def get_overall_results(event_id: int, stage_id: int) -> list[dict]:
+    """Devuelve la clasificación general acumulada hasta una etapa dada."""
+    if _use_mock():
+        logger.info("[MOCK] Cargando overall para stage_id=%d", stage_id)
+        return mock.MOCK_OVERALL.get(stage_id, [])
+
+    url = f"{_RESULTS_BASE}/rally-event/{event_id}/results/{stage_id}/stage-overall"
+    return _get(url)
+
+
+def get_split_times(event_id: int, stage_id: int) -> dict:
+    """Devuelve los split times de una etapa."""
+    if _use_mock():
+        logger.info("[MOCK] Split times no disponibles en mock, devolviendo vacío")
+        return {}
+
+    url = (
+        f"{_RESULTS_BASE}/rally-event/{event_id}"
+        f"/stage-times/stage-external/{stage_id}/split-times"
+    )
+    return _get(url)
+````
+
+## File: Makefile
+````makefile
+.PHONY: install run-api run-dashboard test help
+
+# ── Setup ──────────────────────────────────────────────────────────
+install:
+	python -m venv venv
+	. venv/bin/activate && pip install --upgrade pip && pip install -r requirements.txt
+	cp -n .env.example .env || true
+	@echo "✅  Entorno listo. Activa con: source venv/bin/activate"
+
+# ── Run ────────────────────────────────────────────────────────────
+run-api:
+	uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload
+
+run-dashboard:
+	streamlit run dashboard/app.py --server.port 8501
+
+# ── Tests ──────────────────────────────────────────────────────────
+test:
+	pytest backend/tests/ -v
+
+# ── Help ───────────────────────────────────────────────────────────
+help:
+	@echo ""
+	@echo "Comandos disponibles:"
+	@echo "  make install        Crea venv e instala dependencias"
+	@echo "  make run-api        Arranca FastAPI en localhost:8000"
+	@echo "  make run-dashboard  Arranca Streamlit en localhost:8501"
+	@echo "  make test           Ejecuta los tests"
+	@echo ""
+````
+
+## File: pytest.ini
+````ini
+[pytest]
+testpaths = backend/tests
+python_files = test_*.py
+python_functions = test_*
+addopts = -v --tb=short
+````
+
+## File: README.md
+````markdown
+# 🏁 Rally Performance Analyzer
+
+Dashboard interactivo para analizar tiempos y rendimiento en el **World Rally Championship (WRC)**.
+
+> Proyecto de portfolio — Análisis de datos / Motorsport
+
+---
+
+## Stack tecnológico
+
+| Capa | Tecnología |
+|---|---|
+| Backend | Python · FastAPI · Uvicorn |
+| Dashboard | Streamlit |
+| Datos | Pandas · Numpy |
+| Visualización | Plotly |
+| Ingesta | httpx (WRC Live Timing API) |
+| Tests | Pytest |
+
+---
+
+## Funcionalidades (MVP)
+
+- 📊 Clasificación general del rally
+- ⏱️ Tiempos por etapa con gap vs líder
+- 📈 Evolución de posiciones a lo largo del rally
+- 🔀 Comparativa entre dos pilotos
+- 🎛️ Filtros dinámicos por rally y temporada
+
+---
+
+## Arquitectura
+
+```
+WRC API → Ingesta (httpx + Pandas) → data/processed/ → FastAPI → Streamlit + Plotly
+```
+
+---
+
+## Cómo ejecutar
+
+```bash
+# Instalar dependencias
+make install
+source venv/bin/activate
+
+# Terminal 1 — API
+make run-api        # http://localhost:8000/docs
+
+# Terminal 2 — Dashboard
+make run-dashboard  # http://localhost:8501
+```
+
+---
+
+## Tests
+
+```bash
+make test
+```
+
+---
+
+## Estado del proyecto
+
+| Bloque | Descripción | Estado |
+|---|---|---|
+| 0 | Setup del proyecto | ✅ Completado |
+| 1 | Ingesta de datos WRC | ⏳ Pendiente |
+| 2 | Backend FastAPI | ⏳ Pendiente |
+| 3 | Dashboard base | ⏳ Pendiente |
+| 4 | Gráficos avanzados | ⏳ Pendiente |
+| 5 | Pulido y deploy | ⏳ Pendiente |
+
+---
+
+## Documentación
+
+Ver [`docs/`](docs/) para la documentación detallada de cada bloque.
+````
+
+## File: requirements.txt
+````
+# ── Web framework ─────────────────────────────────────────────────
+fastapi==0.111.0
+uvicorn[standard]==0.29.0
+
+# ── Dashboard ─────────────────────────────────────────────────────
+streamlit==1.35.0
+
+# ── Data processing ───────────────────────────────────────────────
+pandas==2.2.2
+numpy==1.26.4
+
+# ── Visualisation ─────────────────────────────────────────────────
+plotly==5.22.0
+
+# ── HTTP client (WRC API ingestion) ───────────────────────────────
+httpx==0.27.0
+
+# ── Validation ────────────────────────────────────────────────────
+pydantic==2.7.1
+pydantic-settings==2.3.0
+
+# ── Testing ───────────────────────────────────────────────────────
+pytest==8.2.0
+pytest-asyncio==0.23.6
+httpx==0.27.0          # also used as AsyncClient in tests
+
+# ── Utilities ─────────────────────────────────────────────────────
+python-dotenv==1.0.1
+````
