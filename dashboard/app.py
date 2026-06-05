@@ -1,17 +1,11 @@
-"""Rally Performance Analyzer - Dashboard principal."""
 from __future__ import annotations
+import sys, os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import pandas as pd
 import streamlit as st
-import sys, os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from dashboard.components import api_client as api
 
-st.set_page_config(
-    page_title="Rally Performance Analyzer",
-    page_icon="checkered_flag",
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
+st.set_page_config(page_title="Rally Performance Analyzer", layout="wide", initial_sidebar_state="expanded")
 
 with st.sidebar:
     st.markdown("## Rally Analyzer")
@@ -33,8 +27,7 @@ stages = api.get_stages()
 drivers = api.get_drivers()
 
 if not rallies or not classification:
-    st.error("No se puede conectar con la API. Asegurate de que FastAPI esta corriendo en localhost:8000")
-    st.code("uvicorn backend.app.main:app --reload")
+    st.error("No se puede conectar con la API. Arranca FastAPI primero: uvicorn backend.app.main:app --reload")
     st.stop()
 
 rally = rallies[0]
@@ -58,18 +51,10 @@ with col_left:
     if entries:
         rows = []
         for e in entries:
-            gap = e.get("diff_first_s", 0)
+            gap = e.get("diff_first_s", 0) or 0
             gap_str = "LIDER" if gap == 0 else f"+{gap:.1f}s"
-            rows.append({
-                "Pos.": e["position"],
-                "Piloto": e["driver_name"],
-                "#": e.get("car_number", ""),
-                "Fabricante": e.get("manufacturer", ""),
-                "Tiempo total": e.get("total_time_str", "-"),
-                "Gap": gap_str,
-            })
-        df = pd.DataFrame(rows)
-        st.dataframe(df, use_container_width=True, hide_index=True)
+            rows.append({"Pos.": e["position"], "Piloto": e["driver_name"], "#": e.get("car_number", ""), "Fabricante": e.get("manufacturer", ""), "Tiempo total": e.get("total_time_str", "-"), "Gap": gap_str})
+        st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
 
 with col_right:
     st.markdown("### Fabricantes")
@@ -78,14 +63,11 @@ with col_right:
         fab = e.get("manufacturer", "Otro")
         fab_data[fab] = fab_data.get(fab, 0) + 1
     for fab, count in sorted(fab_data.items()):
-        st.markdown(f"**{fab}** - {count} piloto")
+        st.markdown(f"**{fab}** - {count} pilotos")
     st.markdown("---")
     st.markdown("### Podio")
     medals = ["1.", "2.", "3."]
     for e in entries[:3]:
-        gap = e.get("diff_first_s", 0)
+        gap = e.get("diff_first_s", 0) or 0
         gap_str = "LIDER" if gap == 0 else f"+{gap:.1f}s"
-        st.markdown(
-            f"{medals[e['position']-1]} **{e['driver_name']}** "
-            f"({e.get('manufacturer', '')}) - {gap_str}"
-        )
+        st.markdown(f"{medals[e['position']-1]} **{e['driver_name']}** ({e.get('manufacturer','')}) - {gap_str}")

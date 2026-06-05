@@ -29,6 +29,8 @@ dashboard/
     ├── 02_evolution.py            ← nuevo: página de evolución
     └── 03_compare.py              ← nuevo: página de comparativa
 
+ingestion/pipeline.py              ← modificado: encoding="utf-8-sig"
+backend/app/services/data_loader.py ← modificado: encoding="utf-8-sig"
 docs/
 └── bloque-03-dashboard.md         ← este archivo
 ```
@@ -57,26 +59,26 @@ st.plotly_chart()   → renderizado en el navegador
 
 ## Páginas del dashboard
 
-### 🏠 Overview (`app.py`)
+### Overview (`app.py`)
 - KPIs: nombre del rally, país, nº etapas, nº pilotos
 - Tabla de clasificación general final con gaps
 - Resumen por fabricante
 - Podio (Top 3)
 
-### ⏱️ Etapas (`pages/01_stages.py`)
+### Etapas (`pages/01_stages.py`)
 - Selector dinámico de etapa (código + nombre + distancia)
 - KPIs de la etapa: código, distancia, superficie
 - Bar chart horizontal con tiempos, coloreado por fabricante
 - Gap vs líder anotado en cada barra
 - Tabla detallada con gap vs líder y gap vs anterior
 
-### 📈 Evolución (`pages/02_evolution.py`)
+### Evolución (`pages/02_evolution.py`)
 - Multiselect de pilotos (filtro dinámico)
 - Bump chart: posición de cada piloto etapa a etapa (eje Y invertido)
 - Gap chart: gap acumulado respecto al líder
 - Tabla pivot de posiciones por etapa
 
-### 🔀 Comparativa (`pages/03_compare.py`)
+### Comparativa (`pages/03_compare.py`)
 - Dos selectores de piloto
 - KPIs: etapas ganadas por cada piloto
 - Grouped bar chart con tiempos por etapa de ambos pilotos
@@ -95,73 +97,51 @@ st.plotly_chart()   → renderizado en el navegador
 | `create_position_evolution_chart()` | Bump chart | Posición etapa a etapa |
 | `create_comparison_chart()` | Grouped bar | Tiempos de dos pilotos |
 
-Todas las funciones reciben un DataFrame y devuelven un `go.Figure`.
-Los colores se asignan por fabricante (Toyota=rojo, Hyundai=azul).
-
 ### `api_client.py`
-
 Encapsula todas las llamadas HTTP al backend. Si la API no está disponible,
 devuelve listas/dicts vacíos en lugar de lanzar excepciones.
 
 ---
 
-## Cómo ejecutar el dashboard
+## Lecciones del Bloque 3
 
-Con el backend ya corriendo en el terminal 1:
-
-```bash
-# Terminal 2 — desde la raíz del proyecto
-streamlit run dashboard/app.py
-```
-
-Abre → `http://localhost:8501`
-
----
-
-## Validaciones del Bloque 3
-
-### V1 — Dashboard arranca sin errores
-```
-streamlit run dashboard/app.py
-→ http://localhost:8501 visible en el navegador
-```
-
-### V2 — Overview muestra clasificación
-```
-http://localhost:8501
-→ Tabla con 6 pilotos, KPIs del rally visibles
-```
-
-### V3 — Página Etapas funciona
-```
-http://localhost:8501/01_stages
-→ Selector de etapa + bar chart + tabla
-```
-
-### V4 — Página Evolución funciona
-```
-http://localhost:8501/02_evolution
-→ Bump chart y gap chart visibles
-→ Filtro multiselect de pilotos reactivo
-```
-
-### V5 — Página Comparativa funciona
-```
-http://localhost:8501/03_compare
-→ Selectores de piloto + grouped bar chart + tabla
-```
-
----
-
-## Posibles errores comunes
-
-| Error | Causa | Solución |
+| Problema | Causa | Solución |
 |---|---|---|
-| `⚠️ No se puede conectar con la API` | FastAPI no está corriendo | Arrancar con `uvicorn backend.app.main:app --reload` |
-| `ModuleNotFoundError: dashboard` | Streamlit no encuentra el módulo | Ejecutar desde la raíz del proyecto |
-| Gráfico vacío | `df` está vacío | Verificar que se ejecutó el pipeline del Bloque 1 |
-| `st.page_link` error | Versión de Streamlit antigua | Verificar `streamlit==1.35.0` |
+| `utf-8 codec can't decode byte 0xa1` en dashboard | Windows guardó los CSVs/archivos con encoding cp1252 en lugar de UTF-8 | Usar `encoding="utf-8-sig"` tanto al guardar CSVs (`pipeline.py`) como al leerlos (`data_loader.py`) |
+| El fix `encoding="latin-1"` no funcionó | El error seguía diciendo `utf-8 codec` porque Python seguía usando UTF-8 en otro lugar | La solución correcta es `utf-8-sig` en ambos lados (escritura y lectura) |
+| `dashboard/app.py` se corrompió al copiarlo del zip | Windows guardó el archivo con cp1252, corrompiendo emojis y caracteres especiales (`é`, `ó`, `ñ`, `─`) | Reescribir el archivo limpio desde terminal con `python -c "open(..., encoding='utf-8')"` o usar VSCode → Save with Encoding → UTF-8 |
+| `ModuleNotFoundError: No module named 'dashboard'` | Streamlit ejecuta `app.py` desde dentro de `dashboard/`, por lo que el módulo raíz no está en el path | Añadir al inicio de `app.py`: `sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))` |
+| `lru_cache` parecía cachear el error de encoding | Al reiniciar Streamlit sin reiniciar la API, la caché del data_loader podía tener estado inconsistente | Reiniciar siempre **ambos** procesos (API + Streamlit) después de cambios en `data_loader.py` |
+
+### Nota sobre encoding en Windows
+Windows usa por defecto `cp1252` (Windows-1252) para archivos de texto. Python en Windows también usa este encoding por defecto al abrir archivos sin especificarlo. El BOM de `utf-8-sig` le indica a Windows que el archivo es UTF-8, evitando el problema. **Regla:** siempre especificar `encoding="utf-8-sig"` al leer/escribir CSVs con caracteres especiales en proyectos Python en Windows.
 
 ---
 
-*Siguiente: Bloque 4 — Gráficos avanzados y pulido visual.*
+## Issues visuales detectados (a corregir en Bloque 4)
+
+| Issue | Descripción |
+|---|---|
+| Bump chart comprimido | Todos los datos aparecen en una sola columna, el eje X no muestra las etapas |
+| Gap chart sin labels | El eje X e Y no muestran valores legibles |
+| Bar chart sin nombres | El eje Y del bar chart de etapas no muestra los nombres de los pilotos |
+| Comparativa tabla duplicada | El merge de la tabla de comparativa produce filas duplicadas |
+| Colores muy llamativos | Rojo/azul intensos no encajan con estética profesional de portfolio |
+
+---
+
+## Validaciones completadas
+
+```
+V1 — Dashboard arranca sin errores    ✅
+V2 — Overview con clasificación       ✅
+V3 — Pagina Etapas con chart          ✅
+V4 — Pagina Evolucion                 ✅
+V5 — Pagina Comparativa               ✅
+GitHub repo creado y subido           ✅
+README actualizado                    ✅
+```
+
+---
+
+*Siguiente: Bloque 4 — Graficos avanzados y pulido visual.*

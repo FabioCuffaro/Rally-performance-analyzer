@@ -42,7 +42,7 @@ def _save_json(data: object, path: Path) -> None:
 
 def _save_csv(df: pd.DataFrame, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    df.to_csv(path, index=False, encoding="utf-8-sig")
+    df.to_csv(path, index=False, encoding="utf-8")
     logger.info("CSV guardado → %s (%d filas)", path.name, len(df))
 
 

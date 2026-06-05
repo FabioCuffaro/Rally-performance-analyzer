@@ -29,7 +29,7 @@ def _load_csv(filename: str) -> pd.DataFrame:
     if not path.exists():
         logger.warning("CSV no encontrado: %s — devolviendo DataFrame vacío", filename)
         return pd.DataFrame()
-    df = pd.read_csv(path, encoding="utf-8-sig")
+    df = pd.read_csv(path)
     logger.info("CSV cargado: %s (%d filas)", filename, len(df))
     return df
 

@@ -1,8 +1,7 @@
 """
-Servicio de analítica.
+Servicio de analitica.
 
-Funciones de cálculo y transformación sobre los DataFrames cargados.
-Separa la lógica de negocio de los routers.
+Funciones de calculo y transformacion sobre los DataFrames cargados.
 """
 
 from __future__ import annotations
@@ -17,9 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 def get_stage_result(stage_id: int) -> pd.DataFrame:
-    """
-    Devuelve los tiempos enriquecidos de una etapa concreta, ordenados por posición.
-    """
+    """Tiempos enriquecidos de una etapa concreta, ordenados por posicion."""
     df = loader.get_stage_times_enriched()
     if df.empty:
         return df
@@ -28,9 +25,7 @@ def get_stage_result(stage_id: int) -> pd.DataFrame:
 
 
 def get_overall_at_stage(stage_id: int) -> pd.DataFrame:
-    """
-    Devuelve la clasificación general enriquecida tras una etapa concreta.
-    """
+    """Clasificacion general enriquecida tras una etapa concreta."""
     df = loader.get_overall_enriched()
     if df.empty:
         return df
@@ -39,9 +34,7 @@ def get_overall_at_stage(stage_id: int) -> pd.DataFrame:
 
 
 def get_final_classification() -> pd.DataFrame:
-    """
-    Devuelve la clasificación final del rally (tras la última etapa).
-    """
+    """Clasificacion final del rally (tras la ultima etapa)."""
     df = loader.get_overall_enriched()
     if df.empty:
         return df
@@ -50,40 +43,38 @@ def get_final_classification() -> pd.DataFrame:
 
 
 def get_driver_evolution(entry_id: int) -> pd.DataFrame:
-    """
-    Devuelve la evolución de posición de un piloto etapa a etapa.
-    """
+    """Evolucion de posicion de un piloto etapa a etapa."""
     df = loader.get_overall_enriched()
     if df.empty:
         return df
-    stages = loader.get_stages()[["stage_id", "stage_code"]].copy()
+    # stage_code ya existe en el CSV — no hace falta merge adicional
     result = df[df["entry_id"] == entry_id].copy()
-    result = result.merge(stages, on="stage_id", how="left")
     return result.sort_values("stage_id").reset_index(drop=True)
 
 
 def get_all_drivers_evolution() -> pd.DataFrame:
-    """
-    Devuelve la evolución de posición de todos los pilotos (para el bump chart).
-    """
+    """Evolucion de posicion de todos los pilotos (bump chart)."""
     df = loader.get_overall_enriched()
     if df.empty:
         return df
-    stages = loader.get_stages()[["stage_id", "stage_code"]].copy()
-    result = df.merge(stages, on="stage_id", how="left")
-    return result.sort_values(["entry_id", "stage_id"]).reset_index(drop=True)
+    # stage_code ya existe en el CSV — no hace falta merge adicional
+    # Solo aseguramos que la columna existe; si no, usamos stage_id como fallback
+    if "stage_code" not in df.columns:
+        stages = loader.get_stages()[["stage_id", "stage_code"]].copy()
+        df = df.merge(stages, on="stage_id", how="left")
+    return df.sort_values(["entry_id", "stage_id"]).reset_index(drop=True)
 
 
 def get_driver_comparison(entry_id_a: int, entry_id_b: int) -> dict:
-    """
-    Devuelve los tiempos por etapa de dos pilotos para comparativa.
-    """
+    """Tiempos por etapa de dos pilotos para comparativa."""
     times = loader.get_stage_times_enriched()
-    stages = loader.get_stages()[["stage_id", "stage_code"]]
 
     def _get_driver_times(entry_id: int) -> pd.DataFrame:
         df = times[times["entry_id"] == entry_id].copy()
-        df = df.merge(stages, on="stage_id", how="left")
+        # stage_code ya existe en el CSV — no hace falta merge adicional
+        if "stage_code" not in df.columns:
+            stages = loader.get_stages()[["stage_id", "stage_code"]]
+            df = df.merge(stages, on="stage_id", how="left")
         return df.sort_values("stage_id").reset_index(drop=True)
 
     return {

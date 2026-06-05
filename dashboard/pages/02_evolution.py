@@ -1,6 +1,8 @@
-"""Página de evolución — bump chart y gap acumulado."""
+"""Pagina de evolucion — bump chart y gap acumulado."""
 
 from __future__ import annotations
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import pandas as pd
 import streamlit as st
@@ -11,23 +13,22 @@ from dashboard.components.charts import (
     create_position_evolution_chart,
 )
 
-st.set_page_config(page_title="Evolución — Rally Analyzer", page_icon="📈", layout="wide")
+st.set_page_config(page_title="Evolucion — Rally Analyzer", page_icon="📈", layout="wide")
 
 with st.sidebar:
-    st.markdown("## 🏁 Rally Analyzer")
+    st.markdown("## Rally Analyzer")
     st.markdown("---")
-    st.page_link("app.py", label="🏠 Overview")
-    st.page_link("pages/01_stages.py", label="⏱️ Etapas")
-    st.page_link("pages/02_evolution.py", label="📈 Evolución")
-    st.page_link("pages/03_compare.py", label="🔀 Comparativa")
+    st.page_link("app.py", label="Overview")
+    st.page_link("pages/01_stages.py", label="Etapas")
+    st.page_link("pages/02_evolution.py", label="Evolucion")
+    st.page_link("pages/03_compare.py", label="Comparativa")
 
-st.title("📈 Evolución del Rally")
+st.title("Evolucion del Rally")
 st.divider()
 
-# ── Carga de datos ────────────────────────────────────────────────────────────
 evolution = api.get_evolution()
 if not evolution:
-    st.error("⚠️ No se puede conectar con la API.")
+    st.error("No se puede conectar con la API.")
     st.stop()
 
 # Construir DataFrame plano
@@ -35,53 +36,56 @@ rows = []
 for driver in evolution:
     for pos in driver["positions"]:
         rows.append({
-            "entry_id": driver["entry_id"],
+            "entry_id":    driver["entry_id"],
             "driver_name": driver["driver_name"],
             "driver_code": driver["driver_code"],
             "manufacturer": driver["manufacturer"],
-            "stage_id": pos["stage_id"],
-            "stage_code": pos["stage_code"],
-            "position": pos["position"],
-            "diff_first_s": pos.get("diff_first_s", 0) or 0,
+            "stage_id":    pos["stage_id"],
+            "stage_code":  pos["stage_code"],
+            "position":    pos["position"],
+            "diff_first_s": pos.get("diff_first_s") or 0,
         })
 
 df = pd.DataFrame(rows)
 
-# ── Filtro de pilotos ─────────────────────────────────────────────────────────
-all_drivers = sorted(df["driver_code"].unique())
-selected = st.multiselect(
-    "Filtrar pilotos (vacío = todos)",
-    options=all_drivers,
-    default=[],
-)
-if selected:
-    df_filtered = df[df["driver_code"].isin(selected)]
-else:
-    df_filtered = df
+if df.empty or df["stage_code"].str.strip().eq("").all():
+    st.warning("No hay datos de evolucion disponibles. Verifica que el pipeline se ejecuto correctamente.")
+    st.stop()
 
-# ── Gráfico 1: Bump chart ─────────────────────────────────────────────────────
-st.markdown("### 🎯 Posición a lo largo del rally")
+# Filtro de pilotos
+all_drivers = sorted(df["driver_code"].unique())
+selected = st.multiselect("Filtrar pilotos (vacio = todos)", options=all_drivers, default=[])
+df_filtered = df[df["driver_code"].isin(selected)] if selected else df
+
+# Bump chart
+st.markdown("### Posicion a lo largo del rally")
 fig_bump = create_position_evolution_chart(df_filtered)
 st.plotly_chart(fig_bump, use_container_width=True)
 
-# ── Gráfico 2: Gap acumulado ──────────────────────────────────────────────────
-st.markdown("### ⏳ Gap acumulado respecto al líder")
-
-# Excluir al líder en cada etapa (diff=0 constante no aporta info)
+# Gap chart (excluir lider)
+st.markdown("### Gap acumulado respecto al lider")
 df_gap = df_filtered[df_filtered["diff_first_s"] > 0].copy()
 if df_gap.empty:
-    st.info("Solo hay un piloto seleccionado — el líder no tiene gap.")
+    st.info("El lider no tiene gap. Selecciona otros pilotos para ver diferencias.")
 else:
     fig_gap = create_gap_evolution_chart(df_gap)
     st.plotly_chart(fig_gap, use_container_width=True)
 
-# ── Tabla resumen ─────────────────────────────────────────────────────────────
-st.markdown("### 📋 Posiciones por etapa")
-pivot = df_filtered.pivot_table(
-    index=["driver_code", "manufacturer"],
-    columns="stage_code",
-    values="position",
-    aggfunc="first",
-).reset_index()
-pivot.columns.name = None
-st.dataframe(pivot, use_container_width=True, hide_index=True)
+# Tabla pivot
+st.markdown("### Posiciones por etapa")
+try:
+    stage_order = df_filtered.drop_duplicates("stage_id").sort_values("stage_id")["stage_code"].tolist()
+    pivot = df_filtered.pivot_table(
+        index=["driver_code", "manufacturer"],
+        columns="stage_code",
+        values="position",
+        aggfunc="first",
+    ).reset_index()
+    pivot.columns.name = None
+    # Reordenar columnas por etapa
+    fixed_cols = ["driver_code", "manufacturer"]
+    stage_cols = [c for c in stage_order if c in pivot.columns]
+    pivot = pivot[fixed_cols + stage_cols]
+    st.dataframe(pivot, use_container_width=True, hide_index=True)
+except Exception:
+    pass
