@@ -8,47 +8,77 @@ y devuelven un go.Figure listo para st.plotly_chart().
 from __future__ import annotations
 
 import plotly.graph_objects as go
-import plotly.express as px
 import pandas as pd
 
-# ── Paleta de colores profesional ─────────────────────────────────────────────
-MANUFACTURER_COLORS: dict[str, str] = {
-    "Toyota":  "#C8102E",   # rojo Toyota (mas sobrio que el original)
-    "Hyundai": "#003B8E",   # azul marino Hyundai
-    "Ford":    "#003399",
-    "Citroen": "#C60C30",
-}
-
-# Paleta suave para pilotos sin fabricante conocido
-FALLBACK_COLORS = [
-    "#E63946", "#457B9D", "#2A9D8F", "#E9C46A",
-    "#F4A261", "#264653", "#6A4C93", "#1982C4",
+# ── Paleta coordinada con tema oscuro (config.toml base=dark) ─────────────────
+# 20 colores visualmente distintos entre si, legibles sobre fondo oscuro.
+# Se asignan por posicion de iteracion (no por fabricante) para que cada
+# piloto tenga siempre un color unico aunque comparta equipo.
+DRIVER_COLORS = [
+    "#FF4B4B",  # rojo vivo
+    "#4CC9F0",  # azul electrico
+    "#F8961E",  # naranja
+    "#7BF1A8",  # verde menta
+    "#BB8FCE",  # lavanda
+    "#FEE440",  # amarillo
+    "#00F5D4",  # cyan
+    "#9B5DE5",  # violeta
+    "#F72585",  # rosa fuerte
+    "#4361EE",  # azul indigo
+    "#FB5607",  # naranja rojizo
+    "#FFBE0B",  # ambar
+    "#06D6A0",  # esmeralda
+    "#EF233C",  # rojo carmesi
+    "#8338EC",  # purpura
+    "#3BF4FB",  # turquesa
+    "#E9FF70",  # lima
+    "#FF9F1C",  # mandarina
+    "#2EC4B6",  # teal
+    "#FF6FA8",  # rosa salmon
 ]
 
-GRID_COLOR   = "#E8E8E8"
-BG_COLOR     = "#FAFAFA"
-FONT_COLOR   = "#1A1A2E"
-FONT_FAMILY  = "Inter, Arial, sans-serif"
+# Solo para la comparativa de dos pilotos donde el equipo aporta contexto visual
+MANUFACTURER_COLORS: dict[str, str] = {
+    "Toyota":  "#FF4B4B",
+    "Hyundai": "#4CC9F0",
+    "Ford":    "#F8961E",
+    "Citroen": "#7BF1A8",
+}
+
+GRID_COLOR  = "#2D2D4E"
+BG_COLOR    = "rgba(0,0,0,0)"   # transparente — hereda el fondo oscuro de Streamlit
+FONT_COLOR  = "#FFFFFF"
+FONT_FAMILY = "Inter, Arial, sans-serif"
 
 
-def _color(manufacturer: str, idx: int = 0) -> str:
-    return MANUFACTURER_COLORS.get(manufacturer, FALLBACK_COLORS[idx % len(FALLBACK_COLORS)])
+def _driver_color(idx: int) -> str:
+    return DRIVER_COLORS[idx % len(DRIVER_COLORS)]
+
+
+def _manufacturer_color(manufacturer: str, idx: int = 0) -> str:
+    return MANUFACTURER_COLORS.get(manufacturer, DRIVER_COLORS[idx % len(DRIVER_COLORS)])
 
 
 def _base_layout(**kwargs) -> dict:
     """Layout base compartido por todos los graficos."""
+    _axis = dict(
+        gridcolor=GRID_COLOR,
+        linecolor="#404060",
+        tickfont=dict(color=FONT_COLOR),
+        title_font=dict(color=FONT_COLOR),
+    )
     base = dict(
-        plot_bgcolor="rgba(0,0,0,0)",
-paper_bgcolor="rgba(0,0,0,0)",
-        font=dict(family=FONT_FAMILY, size=12, color="#FFFFFF"),
-        xaxis=dict(gridcolor="rgba(255,255,255,0.15)", linecolor="rgba(255,255,255,0.3)"),
-        yaxis=dict(gridcolor="rgba(255,255,255,0.15)", linecolor="rgba(255,255,255,0.3)"),
+        plot_bgcolor=BG_COLOR,
+        paper_bgcolor="rgba(0,0,0,0)",
+        font=dict(family=FONT_FAMILY, size=12, color=FONT_COLOR),
+        xaxis=_axis,
+        yaxis=_axis,
         legend=dict(
             orientation="h", yanchor="bottom", y=1.02,
-            xanchor="right", x=1, font=dict(size=11),
+            xanchor="right", x=1, font=dict(size=11, color=FONT_COLOR),
         ),
         margin=dict(l=10, r=90, t=55, b=45),
-        hoverlabel=dict(bgcolor="white", font_size=12),
+        hoverlabel=dict(bgcolor="#1A1A2E", font_size=12, font_color=FONT_COLOR),
     )
     base.update(kwargs)
     return base
@@ -59,34 +89,30 @@ paper_bgcolor="rgba(0,0,0,0)",
 def create_stage_times_chart(df: pd.DataFrame, stage_code: str) -> go.Figure:
     """
     Bar chart horizontal de tiempos por etapa.
-    Eje Y: nombre del piloto + numero de coche. Eje X: tiempo en segundos.
+    Eje Y: nombre del piloto + fabricante. Eje X: tiempo en segundos.
     """
     if df.empty:
         return go.Figure()
 
-    df = df.sort_values("position", ascending=False).reset_index(drop=True)
+    df = df.sort_values("position", ascending=False).copy()
 
-    # Construccion vectorizada de etiquetas (evita r.get() que puede devolver NaN)
-    df["y_label"] = (
-        df["driver_name"].fillna("?").astype(str)
-        + "  #"
-        + df["car_number"].fillna("").astype(str)
+    df["y_label"] = df.apply(
+        lambda r: f"{r.get('driver_name','?')}  #{r.get('car_number','')}", axis=1
     )
     df["gap_label"] = df["diff_first_s"].apply(
-        lambda x: "LIDER" if (pd.isna(x) or x == 0) else f"+{x:.3f}s"
+        lambda x: "LIDER" if (x == 0 or pd.isna(x)) else f"+{x:.3f}s"
     )
 
-    y_vals  = df["y_label"].tolist()
-    x_vals  = df["time_s"].tolist()
-    colors  = [_color(m, i) for i, m in enumerate(df["manufacturer"].fillna("").tolist())]
+    # Color unico por piloto segun su posicion en el ranking
+    colors = [_driver_color(i) for i in range(len(df))]
 
     fig = go.Figure()
     fig.add_trace(go.Bar(
-        x=x_vals,
-        y=y_vals,
+        x=df["time_s"],
+        y=df["y_label"],
         orientation="h",
         marker=dict(color=colors, opacity=0.85),
-        text=df["gap_label"].tolist(),
+        text=df["gap_label"],
         textposition="outside",
         textfont=dict(size=11, color=FONT_COLOR),
         hovertemplate=(
@@ -96,28 +122,29 @@ def create_stage_times_chart(df: pd.DataFrame, stage_code: str) -> go.Figure:
         ),
     ))
 
-    x_min = min(x_vals)
-    x_max = max(x_vals)
-    x_range_margin = (x_max - x_min) * 0.15
+    x_min = df["time_s"].min()
+    x_max = df["time_s"].max()
+    margin = (x_max - x_min) * 0.15
 
-    fig.update_layout(**_base_layout(
-        title=dict(text=f"Tiempos de etapa — {stage_code}", font=dict(size=15)),
+    layout = _base_layout(
+        title=dict(text=f"Tiempos de etapa — {stage_code}", font=dict(size=15, color=FONT_COLOR)),
         xaxis=dict(
             title="Tiempo (s)",
             gridcolor=GRID_COLOR,
-            range=[x_min * 0.998, x_max + x_range_margin],
+            tickfont=dict(color=FONT_COLOR),
+            title_font=dict(color=FONT_COLOR),
+            range=[x_min * 0.998, x_max + margin],
         ),
         yaxis=dict(
+            title="",
             gridcolor=GRID_COLOR,
-            # tickvals/ticktext fuerzan a Plotly a mostrar los nombres en el eje Y
-            tickmode="array",
-            tickvals=y_vals,
-            ticktext=y_vals,
+            tickfont=dict(color=FONT_COLOR),
             automargin=True,
         ),
-        height=max(300, len(df) * 38 + 80),
-        margin=dict(l=180, r=110, t=55, b=45),
-    ))
+        height=350,
+        margin=dict(l=10, r=100, t=50, b=45),
+    )
+    fig.update_layout(**layout)
     return fig
 
 
@@ -131,17 +158,15 @@ def create_gap_evolution_chart(df: pd.DataFrame) -> go.Figure:
     if df.empty:
         return go.Figure()
 
-    # Ordenar etapas cronologicamente
     stage_order = df.drop_duplicates("stage_id").sort_values("stage_id")["stage_code"].tolist()
 
     fig = go.Figure()
     drivers = df.drop_duplicates("entry_id").sort_values("entry_id")
 
-    for i, row in drivers.iterrows():
+    for idx, (_, row) in enumerate(drivers.iterrows()):
         entry_id = row["entry_id"]
         code = row.get("driver_code", str(entry_id))
-        manufacturer = row.get("manufacturer", "")
-        color = _color(manufacturer, i)
+        color = _driver_color(idx)
 
         d = df[df["entry_id"] == entry_id].copy()
         d["stage_code"] = pd.Categorical(d["stage_code"], categories=stage_order, ordered=True)
@@ -162,18 +187,21 @@ def create_gap_evolution_chart(df: pd.DataFrame) -> go.Figure:
         ))
 
     layout = _base_layout(
-        title=dict(text="Gap acumulado respecto al lider", font=dict(size=15)),
+        title=dict(text="Gap acumulado respecto al lider", font=dict(size=15, color=FONT_COLOR)),
         xaxis=dict(
             title="Etapa",
             type="category",
             categoryorder="array",
             categoryarray=stage_order,
             gridcolor=GRID_COLOR,
-            tickfont=dict(size=12),
+            tickfont=dict(size=12, color=FONT_COLOR),
+            title_font=dict(color=FONT_COLOR),
         ),
         yaxis=dict(
             title="Diferencia (s)",
             gridcolor=GRID_COLOR,
+            tickfont=dict(color=FONT_COLOR),
+            title_font=dict(color=FONT_COLOR),
             rangemode="tozero",
         ),
         height=400,
@@ -198,12 +226,11 @@ def create_position_evolution_chart(df: pd.DataFrame) -> go.Figure:
     fig = go.Figure()
     drivers = df.drop_duplicates("entry_id").sort_values("entry_id")
 
-    for i, row in drivers.iterrows():
+    for idx, (_, row) in enumerate(drivers.iterrows()):
         entry_id = row["entry_id"]
         code = row.get("driver_code", str(entry_id))
         name = row.get("driver_name", code)
-        manufacturer = row.get("manufacturer", "")
-        color = _color(manufacturer, i)
+        color = _driver_color(idx)
 
         d = df[df["entry_id"] == entry_id].copy()
         d["stage_code"] = pd.Categorical(d["stage_code"], categories=stage_order, ordered=True)
@@ -228,14 +255,15 @@ def create_position_evolution_chart(df: pd.DataFrame) -> go.Figure:
         ))
 
     layout = _base_layout(
-        title=dict(text="Evolucion de posiciones por etapa", font=dict(size=15)),
+        title=dict(text="Evolucion de posiciones por etapa", font=dict(size=15, color=FONT_COLOR)),
         xaxis=dict(
             title="Etapa",
             type="category",
             categoryorder="array",
             categoryarray=stage_order,
             gridcolor=GRID_COLOR,
-            tickfont=dict(size=13),
+            tickfont=dict(size=13, color=FONT_COLOR),
+            title_font=dict(color=FONT_COLOR),
         ),
         yaxis=dict(
             title="Posicion",
@@ -244,7 +272,8 @@ def create_position_evolution_chart(df: pd.DataFrame) -> go.Figure:
             tick0=1,
             dtick=1,
             gridcolor=GRID_COLOR,
-            tickfont=dict(size=12),
+            tickfont=dict(size=12, color=FONT_COLOR),
+            title_font=dict(color=FONT_COLOR),
             range=[n_drivers + 0.5, 0.5],
         ),
         height=440,
@@ -266,51 +295,52 @@ def create_comparison_chart(
 ) -> go.Figure:
     """
     Grouped bar chart: tiempos de etapa de dos pilotos lado a lado.
+    Aqui si se usan colores de fabricante porque el contexto visual aporta informacion.
     """
     if df_a.empty or df_b.empty:
         return go.Figure()
 
-    color_a = _color(manufacturer_a, 0)
-    color_b = _color(manufacturer_b, 1)
+    color_a = _manufacturer_color(manufacturer_a, 0)
+    color_b = _manufacturer_color(manufacturer_b, 1)
 
-    # Ordenar ambos DFs y convertir a listas Python para evitar problemas
-    # de alineacion por indice de pandas con go.Bar
-    sort_col = "stage_id" if "stage_id" in df_a.columns else "stage_code"
-    df_a = df_a.sort_values(sort_col).reset_index(drop=True)
-    df_b = df_b.sort_values(sort_col).reset_index(drop=True)
-
-    stages_a  = df_a["stage_code"].tolist()
-    stages_b  = df_b["stage_code"].tolist()
-    all_stages = sorted(set(stages_a) | set(stages_b))
+    stage_order = df_a.sort_values("stage_id")["stage_code"].tolist() if "stage_id" in df_a.columns \
+        else df_a["stage_code"].tolist()
 
     fig = go.Figure()
     fig.add_trace(go.Bar(
         name=name_a,
-        x=stages_a,
-        y=df_a["time_s"].tolist(),
+        x=df_a.sort_values("stage_id")["stage_code"] if "stage_id" in df_a.columns else df_a["stage_code"],
+        y=df_a.sort_values("stage_id")["time_s"] if "stage_id" in df_a.columns else df_a["time_s"],
         marker=dict(color=color_a, opacity=0.85),
         hovertemplate=f"<b>{name_a}</b><br>Etapa: %{{x}}<br>Tiempo: %{{y:.3f}}s<extra></extra>",
     ))
     fig.add_trace(go.Bar(
         name=name_b,
-        x=stages_b,
-        y=df_b["time_s"].tolist(),
+        x=df_b.sort_values("stage_id")["stage_code"] if "stage_id" in df_b.columns else df_b["stage_code"],
+        y=df_b.sort_values("stage_id")["time_s"] if "stage_id" in df_b.columns else df_b["time_s"],
         marker=dict(color=color_b, opacity=0.85),
         hovertemplate=f"<b>{name_b}</b><br>Etapa: %{{x}}<br>Tiempo: %{{y:.3f}}s<extra></extra>",
     ))
 
-    fig.update_layout(**_base_layout(
-        title=dict(text=f"Comparativa: {name_a} vs {name_b}", font=dict(size=15)),
+    layout = _base_layout(
+        title=dict(text=f"Comparativa: {name_a} vs {name_b}", font=dict(size=15, color=FONT_COLOR)),
         barmode="group",
         xaxis=dict(
             title="Etapa",
             type="category",
             categoryorder="array",
-            categoryarray=all_stages,
+            categoryarray=stage_order,
             gridcolor=GRID_COLOR,
-            tickfont=dict(size=13),
+            tickfont=dict(size=13, color=FONT_COLOR),
+            title_font=dict(color=FONT_COLOR),
         ),
-        yaxis=dict(title="Tiempo (s)", gridcolor=GRID_COLOR),
+        yaxis=dict(
+            title="Tiempo (s)",
+            gridcolor=GRID_COLOR,
+            tickfont=dict(color=FONT_COLOR),
+            title_font=dict(color=FONT_COLOR),
+        ),
         height=380,
-    ))
+    )
+    fig.update_layout(**layout)
     return fig

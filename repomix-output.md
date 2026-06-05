@@ -38,6 +38,8 @@ The content is organized as follows:
 ```
 .env.example
 .gitignore
+.streamlit/config.toml
+.streamlit/secrets.example.toml
 backend/__init__.py
 backend/app/__init__.py
 backend/app/config.py
@@ -63,13 +65,19 @@ dashboard/pages/01_stages.py
 dashboard/pages/02_evolution.py
 dashboard/pages/03_compare.py
 data/processed/.gitkeep
+data/processed/events.csv
+data/processed/rallye_automobile_monte_carlo_entries.csv
+data/processed/rallye_automobile_monte_carlo_overall.csv
+data/processed/rallye_automobile_monte_carlo_stage_times.csv
+data/processed/rallye_automobile_monte_carlo_stages.csv
 data/raw/.gitkeep
-docs/0_comandos.md
 docs/bloque-00-setup.md
 docs/bloque-01-ingesta.md
 docs/bloque-02-backend.md
 docs/bloque-03-dashboard.md
 docs/bloque-04-graficos.md
+docs/bloque-05-deploy.md
+docs/comandos.md
 ingestion/__init__.py
 ingestion/mock_data.py
 ingestion/pipeline.py
@@ -78,12 +86,308 @@ ingestion/wrc_client.py
 Makefile
 pytest.ini
 README.md
+render.yaml
 requirements.txt
 ```
 
 # Files
 
-## File: docs/0_comandos.md
+## File: .streamlit/config.toml
+````toml
+[theme]
+base = "dark"
+primaryColor = "#C8102E"
+backgroundColor = "#0E1117"
+secondaryBackgroundColor = "#1A1A2E"
+textColor = "#FFFFFF"
+
+[server]
+headless = true
+enableCORS = false
+port = 8501
+````
+
+## File: .streamlit/secrets.example.toml
+````toml
+# Copia este archivo como .streamlit/secrets.toml para produccion
+# NO subir secrets.toml al repo (ya esta en .gitignore)
+
+# URL de la API en produccion (Render)
+# Cambia esta URL por la URL real de tu servicio en Render
+DASHBOARD_API_URL = "https://rally-performance-analyzer-api.onrender.com"
+````
+
+## File: data/processed/events.csv
+````
+event_id,name,status,country,country_iso,date_start,date_finish
+1,Rallye Automobile Monte Carlo,Completed,France,FR,2024-01-25T00:00:00,2024-01-28T00:00:00
+2,Rally Sweden,Completed,Sweden,SE,2024-02-15T00:00:00,2024-02-18T00:00:00
+3,Safari Rally Kenya,Completed,Kenya,KE,2024-03-28T00:00:00,2024-03-31T00:00:00
+````
+
+## File: data/processed/rallye_automobile_monte_carlo_entries.csv
+````
+entry_id,driver_name,driver_code,driver_nationality,codriver_name,manufacturer,car_number,group
+201,Sébastien Ogier,OGI,FR,Vincent Landais,Toyota,17,WRC
+202,Elfyn Evans,EVA,GB,Scott Martin,Toyota,33,WRC
+203,Thierry Neuville,NEU,BE,Martijn Wydaeghe,Hyundai,11,WRC
+204,Ott Tänak,TAN,EE,Martin Järveoja,Hyundai,6,WRC
+205,Kalle Rovanperä,ROV,FI,Jonne Halttunen,Toyota,69,WRC
+206,Ott Tänak,TAN,EE,Andreas Mikkelsen,Hyundai,8,WRC
+````
+
+## File: data/processed/rallye_automobile_monte_carlo_overall.csv
+````
+event_id,stage_id,entry_id,position,total_time_ms,total_time_s,total_time_str,diff_first_ms,diff_first_s,status,stage_code
+1,101,201,1,834500,834.5,00:13:54.500,0,0.0,0,SS1
+1,101,202,2,836200,836.2,00:13:56.200,1700,1.7,0,SS1
+1,101,203,3,837800,837.8,00:13:57.800,3300,3.3,0,SS1
+1,101,205,4,839100,839.1,00:13:59.100,4600,4.6,0,SS1
+1,101,204,5,841000,841.0,00:14:01.000,6500,6.5,0,SS1
+1,101,206,6,844300,844.3,00:14:04.300,9800,9.8,0,SS1
+1,102,201,1,1408000,1408.0,00:23:28.000,0,0.0,0,SS2
+1,102,203,2,1409800,1409.8,00:23:29.800,1800,1.8,0,SS2
+1,102,202,3,1413600,1413.6,00:23:33.600,5600,5.6,0,SS2
+1,102,205,4,1414300,1414.3,00:23:34.300,6300,6.3,0,SS2
+1,102,204,5,1420800,1420.8,00:23:40.800,12800,12.8,0,SS2
+1,102,206,6,1427400,1427.4,00:23:47.400,19400,19.4,0,SS2
+1,103,201,1,2426000,2426.0,00:40:26.000,0,0.0,0,SS3
+1,103,203,2,2430300,2430.3,00:40:30.300,4300,4.3,0,SS3
+1,103,202,3,2435700,2435.7,00:40:35.700,9700,9.7,0,SS3
+1,103,205,4,2439600,2439.6,00:40:39.600,13600,13.6,0,SS3
+1,103,204,5,2449500,2449.5,00:40:49.500,23500,23.5,0,SS3
+1,103,206,6,2461600,2461.6,00:41:01.600,35600,35.6,0,SS3
+1,104,201,1,3158800,3158.8,00:52:38.800,0,0.0,0,SS4
+1,104,203,2,3166300,3166.3,00:52:46.300,7500,7.5,0,SS4
+1,104,202,3,3166900,3166.9,00:52:46.900,8100,8.1,0,SS4
+1,104,205,4,3174100,3174.1,00:52:54.100,15300,15.3,0,SS4
+1,104,204,5,3188900,3188.9,00:53:08.900,30100,30.1,0,SS4
+1,104,206,6,3204700,3204.7,00:53:24.700,45900,45.9,0,SS4
+1,105,201,1,3988500,3988.5,01:06:28.500,0,0.0,0,SS5
+1,105,203,2,3997500,3997.5,01:06:37.500,9000,9.0,0,SS5
+1,105,202,3,4000700,4000.7,01:06:40.700,12200,12.2,0,SS5
+1,105,205,4,4002400,4002.4,01:06:42.400,13900,13.9,0,SS5
+1,105,204,5,4025400,4025.4,01:07:05.400,36900,36.9,0,SS5
+1,105,206,6,4045700,4045.7,01:07:25.700,57200,57.2,0,SS5
+````
+
+## File: data/processed/rallye_automobile_monte_carlo_stage_times.csv
+````
+event_id,stage_id,entry_id,position,time_ms,time_s,time_str,diff_first_ms,diff_first_s,diff_prev_ms,diff_prev_s,status,stage_code
+1,101,201,1,834500,834.5,00:13:54.500,0,0.0,0,0.0,Completed,SS1
+1,101,202,2,836200,836.2,00:13:56.200,1700,1.7,1700,1.7,Completed,SS1
+1,101,203,3,837800,837.8,00:13:57.800,3300,3.3,1600,1.6,Completed,SS1
+1,101,205,4,839100,839.1,00:13:59.100,4600,4.6,1300,1.3,Completed,SS1
+1,101,204,5,841000,841.0,00:14:01.000,6500,6.5,1900,1.9,Completed,SS1
+1,101,206,6,844300,844.3,00:14:04.300,9800,9.8,3300,3.3,Completed,SS1
+1,102,203,1,572000,572.0,00:09:32.000,0,0.0,0,0.0,Completed,SS2
+1,102,201,2,573500,573.5,00:09:33.500,1500,1.5,1500,1.5,Completed,SS2
+1,102,205,3,575200,575.2,00:09:35.200,3200,3.2,1700,1.7,Completed,SS2
+1,102,202,4,577400,577.4,00:09:37.400,5400,5.4,2200,2.2,Completed,SS2
+1,102,204,5,579800,579.8,00:09:39.800,7800,7.8,2400,2.4,Completed,SS2
+1,102,206,6,583100,583.1,00:09:43.100,11100,11.1,3300,3.3,Completed,SS2
+1,103,201,1,1018000,1018.0,00:16:58.000,0,0.0,0,0.0,Completed,SS3
+1,103,203,2,1020500,1020.5,00:17:00.500,2500,2.5,2500,2.5,Completed,SS3
+1,103,202,3,1022100,1022.1,00:17:02.100,4100,4.1,1600,1.6,Completed,SS3
+1,103,205,4,1025300,1025.3,00:17:05.300,7300,7.3,3200,3.2,Completed,SS3
+1,103,204,5,1028700,1028.7,00:17:08.700,10700,10.7,3400,3.4,Completed,SS3
+1,103,206,6,1034200,1034.2,00:17:14.200,16200,16.2,5500,5.5,Completed,SS3
+1,104,202,1,731200,731.2,00:12:11.200,0,0.0,0,0.0,Completed,SS4
+1,104,201,2,732800,732.8,00:12:12.800,1600,1.6,1600,1.6,Completed,SS4
+1,104,205,3,734500,734.5,00:12:14.500,3300,3.3,1700,1.7,Completed,SS4
+1,104,203,4,736000,736.0,00:12:16.000,4800,4.8,1500,1.5,Completed,SS4
+1,104,204,5,739400,739.4,00:12:19.400,8200,8.2,3400,3.4,Completed,SS4
+1,104,206,6,743100,743.1,00:12:23.100,11900,11.9,3700,3.7,Completed,SS4
+1,105,205,1,828300,828.3,00:13:48.300,0,0.0,0,0.0,Completed,SS5
+1,105,201,2,829700,829.7,00:13:49.700,1400,1.4,1400,1.4,Completed,SS5
+1,105,203,3,831200,831.2,00:13:51.200,2900,2.9,1500,1.5,Completed,SS5
+1,105,202,4,833800,833.8,00:13:53.800,5500,5.5,2600,2.6,Completed,SS5
+1,105,204,5,836500,836.5,00:13:56.500,8200,8.2,2700,2.7,Completed,SS5
+1,105,206,6,841000,841.0,00:14:01.000,12700,12.7,4500,4.5,Completed,SS5
+````
+
+## File: data/processed/rallye_automobile_monte_carlo_stages.csv
+````
+stage_id,stage_code,name,distance_km,surface,leg_name,status
+101,SS1,Col de Turini,18.55,Tarmac,Leg 1,Completed
+102,SS2,La Cabanette - Col de Braus,12.3,Tarmac,Leg 1,Completed
+103,SS3,Lucéram - Lantosque,22.1,Tarmac,Leg 2,Completed
+104,SS4,Saint-Léger - Escragnolles,15.8,Tarmac,Leg 2,Completed
+105,SS5,Col de Turini (Power Stage),18.55,Tarmac,Leg 3,Completed
+````
+
+## File: docs/bloque-05-deploy.md
+````markdown
+# Bloque 5 — Pulido Final y Deploy
+
+## Lecciones del Bloque 4
+
+| Problema | Causa | Solucion |
+|---|---|---|
+| Bar chart sin nombres en eje Y | `tickvals`/`ticktext` no especificados, margen izquierdo de 10px | Añadir `tickmode="array"`, `margin=dict(l=180)` y `automargin=True` |
+| Grouped bar chart mostraba solo una barra | Pandas Series con indice propio desalineaba los traces | Convertir a listas Python con `.tolist()` |
+| Graficos con fondo blanco sobre tema oscuro | `plot_bgcolor="white"` no encaja con dark theme de Streamlit | `plot_bgcolor="rgba(0,0,0,0)"` + colores de texto/grid en blanco |
+
+---
+
+## Objetivo
+
+Preparar el proyecto para produccion: configuracion de deploy, README final,
+ajuste del `.gitignore` para incluir datos mock en el repo, y configuracion
+de Streamlit Cloud + Render.
+
+---
+
+## Archivos creados / modificados
+
+```
+.gitignore                          <- modificado: CSVs mock incluidos, secrets excluidos
+.streamlit/
+    config.toml                     <- nuevo: tema dark + config servidor
+    secrets.example.toml            <- nuevo: ejemplo de secrets para produccion
+render.yaml                         <- nuevo: config de deploy en Render
+dashboard/components/api_client.py  <- modificado: soporte Streamlit secrets
+README.md                           <- modificado: version final con deploy
+docs/bloque-05-deploy.md            <- este archivo
+docs/contexto-proyecto.md           <- nuevo: contexto para futuras sesiones (en .gitignore)
+docs/comandos.md                    <- nuevo: referencia rapida de comandos
+```
+
+---
+
+## Configuracion de deploy
+
+### Streamlit Cloud (dashboard)
+
+Streamlit Cloud conecta directamente con el repo de GitHub y despliega con un click.
+
+1. Ir a https://share.streamlit.io
+2. New app → seleccionar repo `Rally-performance-analyzer`
+3. Main file path: `dashboard/app.py`
+4. En **Advanced settings → Secrets** añadir:
+```toml
+DASHBOARD_API_URL = "https://tu-api.onrender.com"
+```
+5. Deploy
+
+El dashboard lee la URL de la API desde `st.secrets["DASHBOARD_API_URL"]` en produccion
+y desde `os.getenv("DASHBOARD_API_URL", "http://localhost:8000")` en local.
+
+### Render (FastAPI)
+
+1. Ir a https://render.com → New Web Service
+2. Conectar repo de GitHub
+3. Configurar:
+   - **Build command:** `pip install -r requirements.txt && WRC_USE_MOCK=true python -m ingestion.pipeline`
+   - **Start command:** `uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT`
+   - **Environment:** Python 3.11
+4. Deploy
+
+El `render.yaml` en la raiz del proyecto tambien permite deploy automatico.
+
+### Nota sobre los datos en produccion
+
+Los CSVs de mock (`data/processed/*.csv`) se incluyen en el repo (no estan en `.gitignore`)
+para que el deploy funcione sin necesidad de ejecutar el pipeline. El build command
+de Render los regenera igualmente como medida de seguridad.
+
+---
+
+## Cambios en .gitignore
+
+| Cambio | Motivo |
+|---|---|
+| `data/processed/*.csv` → incluidos | Los CSVs de mock son pequeños y necesarios para el deploy |
+| `repomix-output.md` → excluido | Archivo temporal de analisis, no pertenece al repo |
+| `docs/contexto-proyecto.md` → excluido | Documento de uso personal, no publico |
+| `.streamlit/secrets.toml` → excluido | Contiene URLs y credenciales de produccion |
+
+---
+
+## Streamlit theme
+
+Configurado en `.streamlit/config.toml`:
+
+| Parametro | Valor | Descripcion |
+|---|---|---|
+| `base` | `dark` | Tema oscuro base |
+| `primaryColor` | `#C8102E` | Rojo Toyota (color primario del proyecto) |
+| `backgroundColor` | `#0E1117` | Fondo principal |
+| `secondaryBackgroundColor` | `#1A1A2E` | Fondo sidebar y cards |
+| `textColor` | `#FAFAFA` | Texto principal |
+
+---
+
+## Validaciones del Bloque 5
+
+### V1 — Tests siguen pasando
+```bash
+pytest backend/tests/ -v
+→ 51 passed
+```
+
+### V2 — Dashboard arranca con tema correcto
+```
+streamlit run dashboard/app.py
+→ Tema oscuro con color primario rojo visible
+```
+
+### V3 — .gitignore correcto
+```bash
+git status
+→ data/processed/*.csv aparece como untracked (para anadir al repo)
+→ repomix-output.md no aparece
+→ docs/contexto-proyecto.md no aparece
+```
+
+### V4 — README final completo
+```
+README.md incluye: stack, funcionalidades, arquitectura,
+instrucciones de ejecucion, instrucciones de deploy, tabla de estado
+```
+
+### V5 — Deploy en Streamlit Cloud
+```
+URL publica del dashboard funcionando
+```
+
+### V6 — Deploy en Render
+```
+URL publica de la API con /docs funcionando
+```
+
+---
+
+## Commits sugeridos para cerrar el proyecto
+
+```bash
+# 1. Anadir CSVs de mock al repo
+git add data/processed/
+git commit -m "feat: include mock CSVs in repo for deploy"
+
+# 2. Config de deploy y pulido final
+git add .streamlit/ render.yaml .gitignore README.md
+git add dashboard/components/api_client.py
+git add docs/bloque-05-deploy.md docs/comandos.md
+git commit -m "feat: bloque 5 - deploy config, Streamlit theme, README final"
+
+# 3. Push
+git push
+```
+
+---
+
+## Posibles errores en deploy
+
+| Error | Causa | Solucion |
+|---|---|---|
+| Dashboard no conecta con API | `DASHBOARD_API_URL` no configurado en secrets | Añadir en Streamlit Cloud secrets |
+| Render falla en build | Python version incorrecta | Asegurar `PYTHON_VERSION=3.11.9` en env vars |
+| `ModuleNotFoundError` en Render | PYTHONPATH no incluye root | Añadir `PYTHONPATH=.` en env vars de Render |
+| CSVs no encontrados | Pipeline no se ejecuto en build | Verificar build command incluye `python -m ingestion.pipeline` |
+````
+
+## File: docs/comandos.md
 ````markdown
 # Comandos de Referencia Rapida
 
@@ -260,176 +564,19 @@ curl "http://localhost:8000/drivers/compare?entry_a=201&entry_b=202"
 | 105 | SS5 | Power Stage | 18.55 km |
 ````
 
-## File: docs/bloque-04-graficos.md
-````markdown
-# Bloque 4 — Graficos Avanzados y Pulido Visual
-
-## Lecciones del Bloque 3
-
-| Problema | Causa | Solucion |
-|---|---|---|
-| `utf-8 codec can't decode` en dashboard | Windows guarda archivos como cp1252 | `encoding="utf-8-sig"` al leer/escribir CSVs |
-| `ModuleNotFoundError: dashboard` en Streamlit | Streamlit ejecuta desde subcarpeta, root no esta en sys.path | `sys.path.insert(0, ...)` al inicio de cada pagina |
-| Archivo `app.py` corrupto | Windows corrompio emojis y caracteres al copiar del zip | Reescribir desde terminal con encoding UTF-8 explicito |
-
----
-
-## Objetivo
-
-Corregir todos los bugs visuales detectados en el Bloque 3 y pulir la calidad
-visual del dashboard para que quede a nivel de portfolio profesional.
-
----
-
-## Bugs corregidos
-
-### Bug 1: Bump chart y gap chart comprimidos (root cause)
-
-**Problema:** Todos los datos aparecian en una sola columna. El eje X no mostraba
-las etapas SS1-SS5.
-
-**Causa raiz:** Los CSVs generados por el pipeline incluyen la columna `stage_code`.
-Las funciones de `analytics.py` hacian un merge adicional con la tabla de stages
-(que tambien tiene `stage_code`), generando columnas duplicadas `stage_code_x`
-y `stage_code_y`. Al intentar acceder a `row["stage_code"]`, Pandas devolvia `""`
-porque la columna real era `stage_code_x`.
-
-**Solucion:** Eliminar el merge redundante en `analytics.py`. Si `stage_code` ya
-existe en el DataFrame, no volver a hacer merge con stages.
-
-```python
-# ANTES (bug)
-result = df.merge(stages[["stage_id", "stage_code"]], on="stage_id", how="left")
-# → crea stage_code_x y stage_code_y
-
-# DESPUES (fix)
-# stage_code ya existe en el CSV, no hace falta merge adicional
-result = df.copy()
-```
-
-### Bug 2: Tabla comparativa con filas duplicadas
-
-**Problema:** La tabla de comparativa mostraba muchas filas repetidas con los
-mismos tiempos para el piloto A.
-
-**Causa:** El merge `df_a.merge(df_b, on="stage_code")` en `03_compare.py`
-generaba un producto cartesiano cuando los DataFrames tenian indices no alineados.
-
-**Solucion:** Reescribir la tabla iterando sobre las etapas del piloto A y haciendo
-lookup manual del piloto B, garantizando exactamente una fila por etapa.
-
-### Bug 3: Bar chart sin nombres de pilotos visibles
-
-**Problema:** El eje Y del bar chart de etapas no mostraba los nombres.
-
-**Causa:** La columna `y_label` no tenia `automargin=True` en el layout, cortando
-los nombres largos.
-
-**Solucion:** Añadir `automargin=True` al eje Y y ajustar `margin=dict(l=10, r=100)`.
-
-### Bug 4: Eje X categorico no respetado
-
-**Problema:** Plotly interpretaba los codigos de etapa (SS1, SS2...) como strings
-ordinarios, no como categorias ordenadas.
-
-**Solucion:** Usar `type="category"` y `categoryorder="array"` con el orden
-explicito en todos los graficos con eje X de etapas.
-
----
-
-## Mejoras visuales aplicadas
-
-### Paleta de colores profesional
-
-Sustitucion de rojo/azul puros por colores motorsport mas sobrios:
-
-| Fabricante | Color anterior | Color nuevo |
-|---|---|---|
-| Toyota | `#EB0A1E` (rojo puro) | `#C8102E` (rojo Toyota oficial) |
-| Hyundai | `#003399` (azul puro) | `#003B8E` (azul marino Hyundai) |
-
-### Layout base compartido
-
-Todos los graficos usan `_base_layout()` con configuracion consistente:
-- Fondo: `#FAFAFA` (casi blanco, no blanco puro)
-- Grid: `#E8E8E8` (gris muy suave)
-- Fuente: Inter/Arial, 12px, `#1A1A2E`
-- Hover: fondo blanco, borde suave
-
-### Mejoras por grafico
-
-| Grafico | Mejora |
-|---|---|
-| Bar chart etapas | `automargin=True` en eje Y, nombres completos visibles |
-| Bump chart | Eje X categorico ordenado, marcadores con borde blanco |
-| Gap chart | Eje Y con `rangemode="tozero"`, etapas ordenadas cronologicamente |
-| Comparativa | Tiempos ordenados por `stage_id`, sin duplicados |
-
----
-
-## Archivos modificados
-
-```
-backend/app/services/analytics.py   ← fix: eliminar merge redundante de stage_code
-dashboard/components/charts.py      ← reescrito: paleta profesional + axes fixes
-dashboard/pages/01_stages.py        ← sys.path fix + mejoras menores
-dashboard/pages/02_evolution.py     ← sys.path fix + fix datos bump chart
-dashboard/pages/03_compare.py       ← fix tabla duplicada + fix wins calculation
-docs/bloque-04-graficos.md          ← este archivo
-```
-
----
-
-## Validaciones del Bloque 4
-
-### V1 — Tests siguen pasando
-```bash
-pytest backend/tests/ -v
-→ 51 passed
-```
-
-### V2 — Bump chart muestra todas las etapas
-```
-Pagina Evolucion → bump chart con SS1-SS5 en eje X
-→ Cada piloto tiene una linea continua a traves de las 5 etapas
-```
-
-### V3 — Gap chart con ejes correctos
-```
-Pagina Evolucion → gap chart
-→ Eje X: SS1-SS5. Eje Y: segundos. Lineas separadas por piloto
-```
-
-### V4 — Bar chart con nombres visibles
-```
-Pagina Etapas → bar chart
-→ Eje Y muestra "Nombre Piloto #XX" para cada barra
-```
-
-### V5 — Tabla comparativa sin duplicados
-```
-Pagina Comparativa → tabla detalle
-→ Exactamente 5 filas (una por etapa), sin repeticiones
-```
-
-### V6 — Paleta de colores profesional
-```
-Todos los graficos → colores sobrios, consistentes entre paginas
-```
-
----
-
-## Posibles errores comunes
-
-| Error | Causa | Solucion |
-|---|---|---|
-| Graficos siguen en blanco | Cache del navegador | Ctrl+Shift+R para hard reload |
-| `stage_code` vacio en DataFrame | Pipeline antiguo sin la columna | `rm data/processed/*.csv && WRC_USE_MOCK=true python -m ingestion.pipeline` |
-| Bump chart con un solo punto | `stage_code` sigue siendo `stage_code_x` | Verificar que `analytics.py` esta actualizado |
-
----
-
-*Siguiente: Bloque 5 — Pulido final, README y deploy.*
+## File: render.yaml
+````yaml
+services:
+  - type: web
+    name: rally-performance-analyzer-api
+    runtime: python
+    buildCommand: pip install -r requirements.txt && WRC_USE_MOCK=true python -m ingestion.pipeline
+    startCommand: uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: WRC_USE_MOCK
+        value: true
+      - key: PYTHON_VERSION
+        value: 3.11.9
 ````
 
 ## File: .env.example
@@ -477,11 +624,14 @@ env/
 .env
 .env.local
 
-# Data (raw and processed data not committed — too large / regenerable)
+# Data raw (JSON originales — regenerables, no subir)
 data/raw/*.json
 data/raw/*.csv
-data/processed/*.csv
-data/processed/*.parquet
+
+# Data processed — los CSVs de mock SI se suben al repo para el deploy
+# Si quieres excluirlos, descomenta las siguientes lineas:
+# data/processed/*.csv
+# data/processed/*.parquet
 
 # Keep the .gitkeep placeholders
 !data/raw/.gitkeep
@@ -497,12 +647,19 @@ data/processed/*.parquet
 .DS_Store
 Thumbs.db
 
+# Repomix output (herramienta de analisis de codigo, no subir al repo)
+repomix-output.md
+repomix-output*.md
+
+# Contexto interno del proyecto (uso personal, no subir al repo)
+docs/contexto-proyecto.md
+
 # Pytest
 .pytest_cache/
 .coverage
 htmlcov/
 
-# Streamlit
+# Streamlit secrets (contienen URLs y credenciales de produccion)
 .streamlit/secrets.toml
 ````
 
@@ -1041,201 +1198,6 @@ def _isnan(val) -> bool:
 
 ````
 
-## File: backend/app/services/analytics.py
-````python
-"""
-Servicio de analitica.
-
-Funciones de calculo y transformacion sobre los DataFrames cargados.
-"""
-
-from __future__ import annotations
-
-import logging
-
-import pandas as pd
-
-from backend.app.services import data_loader as loader
-
-logger = logging.getLogger(__name__)
-
-
-def get_stage_result(stage_id: int) -> pd.DataFrame:
-    """Tiempos enriquecidos de una etapa concreta, ordenados por posicion."""
-    df = loader.get_stage_times_enriched()
-    if df.empty:
-        return df
-    result = df[df["stage_id"] == stage_id].sort_values("position")
-    return result.reset_index(drop=True)
-
-
-def get_overall_at_stage(stage_id: int) -> pd.DataFrame:
-    """Clasificacion general enriquecida tras una etapa concreta."""
-    df = loader.get_overall_enriched()
-    if df.empty:
-        return df
-    result = df[df["stage_id"] == stage_id].sort_values("position")
-    return result.reset_index(drop=True)
-
-
-def get_final_classification() -> pd.DataFrame:
-    """Clasificacion final del rally (tras la ultima etapa)."""
-    df = loader.get_overall_enriched()
-    if df.empty:
-        return df
-    last_stage = df["stage_id"].max()
-    return get_overall_at_stage(last_stage)
-
-
-def get_driver_evolution(entry_id: int) -> pd.DataFrame:
-    """Evolucion de posicion de un piloto etapa a etapa."""
-    df = loader.get_overall_enriched()
-    if df.empty:
-        return df
-    # stage_code ya existe en el CSV — no hace falta merge adicional
-    result = df[df["entry_id"] == entry_id].copy()
-    return result.sort_values("stage_id").reset_index(drop=True)
-
-
-def get_all_drivers_evolution() -> pd.DataFrame:
-    """Evolucion de posicion de todos los pilotos (bump chart)."""
-    df = loader.get_overall_enriched()
-    if df.empty:
-        return df
-    # stage_code ya existe en el CSV — no hace falta merge adicional
-    # Solo aseguramos que la columna existe; si no, usamos stage_id como fallback
-    if "stage_code" not in df.columns:
-        stages = loader.get_stages()[["stage_id", "stage_code"]].copy()
-        df = df.merge(stages, on="stage_id", how="left")
-    return df.sort_values(["entry_id", "stage_id"]).reset_index(drop=True)
-
-
-def get_driver_comparison(entry_id_a: int, entry_id_b: int) -> dict:
-    """Tiempos por etapa de dos pilotos para comparativa."""
-    times = loader.get_stage_times_enriched()
-
-    def _get_driver_times(entry_id: int) -> pd.DataFrame:
-        df = times[times["entry_id"] == entry_id].copy()
-        # stage_code ya existe en el CSV — no hace falta merge adicional
-        if "stage_code" not in df.columns:
-            stages = loader.get_stages()[["stage_id", "stage_code"]]
-            df = df.merge(stages, on="stage_id", how="left")
-        return df.sort_values("stage_id").reset_index(drop=True)
-
-    return {
-        "driver_a": _get_driver_times(entry_id_a),
-        "driver_b": _get_driver_times(entry_id_b),
-    }
-````
-
-## File: backend/app/services/data_loader.py
-````python
-"""
-Servicio de carga de datos.
-
-Carga los CSVs procesados como DataFrames de Pandas y los cachea en memoria.
-Se inicializa una sola vez al arrancar la API.
-"""
-
-from __future__ import annotations
-
-import logging
-from functools import lru_cache
-from pathlib import Path
-
-import pandas as pd
-
-logger = logging.getLogger(__name__)
-
-# ── Paths ─────────────────────────────────────────────────────────────────────
-_PROJECT_ROOT = Path(__file__).resolve().parents[3]
-_PROCESSED_DIR = _PROJECT_ROOT / "data" / "processed"
-
-# Prefijo del evento principal (Monte Carlo)
-_EVENT_PREFIX = "rallye_automobile_monte_carlo"
-
-
-def _load_csv(filename: str) -> pd.DataFrame:
-    """Carga un CSV desde data/processed/ con manejo de errores."""
-    path = _PROCESSED_DIR / filename
-    if not path.exists():
-        logger.warning("CSV no encontrado: %s — devolviendo DataFrame vacío", filename)
-        return pd.DataFrame()
-    df = pd.read_csv(path)
-    logger.info("CSV cargado: %s (%d filas)", filename, len(df))
-    return df
-
-
-# ── Carga de datos ────────────────────────────────────────────────────────────
-
-@lru_cache(maxsize=1)
-def get_events() -> pd.DataFrame:
-    """Devuelve los eventos de la temporada."""
-    return _load_csv("events.csv")
-
-
-@lru_cache(maxsize=1)
-def get_stages() -> pd.DataFrame:
-    """Devuelve las etapas del rally principal."""
-    return _load_csv(f"{_EVENT_PREFIX}_stages.csv")
-
-
-@lru_cache(maxsize=1)
-def get_entries() -> pd.DataFrame:
-    """Devuelve los pilotos inscritos."""
-    return _load_csv(f"{_EVENT_PREFIX}_entries.csv")
-
-
-@lru_cache(maxsize=1)
-def get_stage_times() -> pd.DataFrame:
-    """Devuelve todos los tiempos de etapa."""
-    return _load_csv(f"{_EVENT_PREFIX}_stage_times.csv")
-
-
-@lru_cache(maxsize=1)
-def get_overall() -> pd.DataFrame:
-    """Devuelve la clasificación general acumulada."""
-    return _load_csv(f"{_EVENT_PREFIX}_overall.csv")
-
-
-def get_stage_times_enriched() -> pd.DataFrame:
-    """
-    Devuelve tiempos de etapa enriquecidos con datos del piloto.
-
-    Join entre stage_times y entries por entry_id.
-    """
-    times = get_stage_times().copy()
-    entries = get_entries()[
-        ["entry_id", "driver_name", "driver_code", "manufacturer", "car_number"]
-    ]
-    if times.empty or entries.empty:
-        return times
-    return times.merge(entries, on="entry_id", how="left")
-
-
-def get_overall_enriched() -> pd.DataFrame:
-    """
-    Devuelve clasificación general enriquecida con datos del piloto.
-    """
-    overall = get_overall().copy()
-    entries = get_entries()[
-        ["entry_id", "driver_name", "driver_code", "manufacturer", "car_number"]
-    ]
-    if overall.empty or entries.empty:
-        return overall
-    return overall.merge(entries, on="entry_id", how="left")
-
-
-def clear_cache() -> None:
-    """Limpia la caché (útil para tests o recarga de datos)."""
-    get_events.cache_clear()
-    get_stages.cache_clear()
-    get_entries.cache_clear()
-    get_stage_times.cache_clear()
-    get_overall.cache_clear()
-    logger.info("Caché de datos limpiada")
-````
-
 ## File: backend/tests/__init__.py
 ````python
 
@@ -1694,111 +1656,45 @@ def test_transform_overall_results_leader_gap():
 
 ````
 
-## File: dashboard/app.py
-````python
-from __future__ import annotations
-import sys, os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-import pandas as pd
-import streamlit as st
-from dashboard.components import api_client as api
-
-st.set_page_config(page_title="Rally Performance Analyzer", layout="wide", initial_sidebar_state="expanded")
-
-with st.sidebar:
-    st.markdown("## Rally Analyzer")
-    st.markdown("---")
-    st.page_link("app.py", label="Overview")
-    st.page_link("pages/01_stages.py", label="Etapas")
-    st.page_link("pages/02_evolution.py", label="Evolucion")
-    st.page_link("pages/03_compare.py", label="Comparativa")
-    st.markdown("---")
-    st.caption("Datos: Rally Monte Carlo 2024")
-
-st.title("Rally Performance Analyzer")
-st.markdown("**World Rally Championship - Analisis de datos**")
-st.divider()
-
-rallies = api.get_rallies()
-classification = api.get_classification()
-stages = api.get_stages()
-drivers = api.get_drivers()
-
-if not rallies or not classification:
-    st.error("No se puede conectar con la API. Arranca FastAPI primero: uvicorn backend.app.main:app --reload")
-    st.stop()
-
-rally = rallies[0]
-entries = classification.get("entries", [])
-
-col1, col2, col3, col4 = st.columns(4)
-with col1:
-    st.metric("Rally", rally["name"].replace("Rallye Automobile ", ""))
-with col2:
-    st.metric("Pais", rally["country"])
-with col3:
-    st.metric("Etapas", len(stages))
-with col4:
-    st.metric("Pilotos", len(drivers))
-
-st.divider()
-col_left, col_right = st.columns([3, 2])
-
-with col_left:
-    st.markdown("### Clasificacion General Final")
-    if entries:
-        rows = []
-        for e in entries:
-            gap = e.get("diff_first_s", 0) or 0
-            gap_str = "LIDER" if gap == 0 else f"+{gap:.1f}s"
-            rows.append({"Pos.": e["position"], "Piloto": e["driver_name"], "#": e.get("car_number", ""), "Fabricante": e.get("manufacturer", ""), "Tiempo total": e.get("total_time_str", "-"), "Gap": gap_str})
-        st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
-
-with col_right:
-    st.markdown("### Fabricantes")
-    fab_data = {}
-    for e in entries:
-        fab = e.get("manufacturer", "Otro")
-        fab_data[fab] = fab_data.get(fab, 0) + 1
-    for fab, count in sorted(fab_data.items()):
-        st.markdown(f"**{fab}** - {count} pilotos")
-    st.markdown("---")
-    st.markdown("### Podio")
-    medals = ["1.", "2.", "3."]
-    for e in entries[:3]:
-        gap = e.get("diff_first_s", 0) or 0
-        gap_str = "LIDER" if gap == 0 else f"+{gap:.1f}s"
-        st.markdown(f"{medals[e['position']-1]} **{e['driver_name']}** ({e.get('manufacturer','')}) - {gap_str}")
-````
-
 ## File: dashboard/components/api_client.py
 ````python
-"""
-Cliente de la API para el dashboard.
-
-Encapsula todas las llamadas al backend FastAPI.
-"""
-
 from __future__ import annotations
-
 import logging
 import os
-
 import requests
 
 logger = logging.getLogger(__name__)
 
-_API_BASE = os.getenv("DASHBOARD_API_URL", "http://localhost:8000")
+
+def _get_api_base() -> str:
+    """Obtiene la URL base de la API segun el entorno."""
+    try:
+        from pathlib import Path
+        import streamlit as st
+        # Streamlit emite "No secrets files found" al acceder a st.secrets aunque
+        # el archivo no exista. Comprobamos las mismas rutas que usa internamente
+        # y solo leemos secrets si el archivo existe, evitando el warning.
+        _secrets_paths = (
+            Path.home() / ".streamlit" / "secrets.toml",
+            Path(".streamlit") / "secrets.toml",
+        )
+        if any(p.exists() for p in _secrets_paths):
+            url = st.secrets.get("DASHBOARD_API_URL", None)
+            if url:
+                return url
+    except Exception:
+        pass
+    return os.getenv("DASHBOARD_API_URL", "http://localhost:8000")
 
 
 def _get(path: str, params: dict | None = None) -> dict | list | None:
-    url = f"{_API_BASE}{path}"
+    url = f"{_get_api_base()}{path}"
     try:
         r = requests.get(url, params=params, timeout=10)
         r.raise_for_status()
         return r.json()
     except requests.exceptions.ConnectionError:
-        logger.error("No se puede conectar con la API en %s", _API_BASE)
+        logger.error("No se puede conectar con la API en %s", _get_api_base())
         return None
     except requests.exceptions.HTTPError as e:
         logger.error("HTTP error %s en %s", e.response.status_code, url)
@@ -1808,654 +1704,26 @@ def _get(path: str, params: dict | None = None) -> dict | list | None:
 def get_rallies() -> list[dict]:
     return _get("/rallies/") or []
 
-
 def get_rally(event_id: int) -> dict | None:
     return _get(f"/rallies/{event_id}")
-
 
 def get_stages() -> list[dict]:
     return _get("/stages/") or []
 
-
 def get_stage_times(stage_id: int) -> dict | None:
     return _get(f"/stages/{stage_id}/times")
-
 
 def get_drivers() -> list[dict]:
     return _get("/drivers/") or []
 
-
 def get_classification() -> dict | None:
     return _get("/drivers/classification")
-
 
 def get_evolution() -> list[dict]:
     return _get("/drivers/evolution") or []
 
-
 def compare_drivers(entry_a: int, entry_b: int) -> dict | None:
     return _get("/drivers/compare", params={"entry_a": entry_a, "entry_b": entry_b})
-````
-
-## File: dashboard/components/charts.py
-````python
-"""
-Graficos Plotly reutilizables para el dashboard.
-
-Paleta profesional motorsport. Todas las funciones reciben un DataFrame
-y devuelven un go.Figure listo para st.plotly_chart().
-"""
-
-from __future__ import annotations
-
-import plotly.graph_objects as go
-import plotly.express as px
-import pandas as pd
-
-# ── Paleta de colores profesional ─────────────────────────────────────────────
-MANUFACTURER_COLORS: dict[str, str] = {
-    "Toyota":  "#C8102E",   # rojo Toyota (mas sobrio que el original)
-    "Hyundai": "#003B8E",   # azul marino Hyundai
-    "Ford":    "#003399",
-    "Citroen": "#C60C30",
-}
-
-# Paleta suave para pilotos sin fabricante conocido
-FALLBACK_COLORS = [
-    "#E63946", "#457B9D", "#2A9D8F", "#E9C46A",
-    "#F4A261", "#264653", "#6A4C93", "#1982C4",
-]
-
-GRID_COLOR   = "#E8E8E8"
-BG_COLOR     = "#FAFAFA"
-FONT_COLOR   = "#1A1A2E"
-FONT_FAMILY  = "Inter, Arial, sans-serif"
-
-
-def _color(manufacturer: str, idx: int = 0) -> str:
-    return MANUFACTURER_COLORS.get(manufacturer, FALLBACK_COLORS[idx % len(FALLBACK_COLORS)])
-
-
-def _base_layout(**kwargs) -> dict:
-    """Layout base compartido por todos los graficos."""
-    base = dict(
-        plot_bgcolor="rgba(0,0,0,0)",
-paper_bgcolor="rgba(0,0,0,0)",
-        font=dict(family=FONT_FAMILY, size=12, color="#FFFFFF"),
-        xaxis=dict(gridcolor="rgba(255,255,255,0.15)", linecolor="rgba(255,255,255,0.3)"),
-        yaxis=dict(gridcolor="rgba(255,255,255,0.15)", linecolor="rgba(255,255,255,0.3)"),
-        legend=dict(
-            orientation="h", yanchor="bottom", y=1.02,
-            xanchor="right", x=1, font=dict(size=11),
-        ),
-        margin=dict(l=10, r=90, t=55, b=45),
-        hoverlabel=dict(bgcolor="white", font_size=12),
-    )
-    base.update(kwargs)
-    return base
-
-
-# ── Grafico 1: Tiempos de etapa (bar horizontal) ──────────────────────────────
-
-def create_stage_times_chart(df: pd.DataFrame, stage_code: str) -> go.Figure:
-    """
-    Bar chart horizontal de tiempos por etapa.
-    Eje Y: nombre del piloto + numero de coche. Eje X: tiempo en segundos.
-    """
-    if df.empty:
-        return go.Figure()
-
-    df = df.sort_values("position", ascending=False).reset_index(drop=True)
-
-    # Construccion vectorizada de etiquetas (evita r.get() que puede devolver NaN)
-    df["y_label"] = (
-        df["driver_name"].fillna("?").astype(str)
-        + "  #"
-        + df["car_number"].fillna("").astype(str)
-    )
-    df["gap_label"] = df["diff_first_s"].apply(
-        lambda x: "LIDER" if (pd.isna(x) or x == 0) else f"+{x:.3f}s"
-    )
-
-    y_vals  = df["y_label"].tolist()
-    x_vals  = df["time_s"].tolist()
-    colors  = [_color(m, i) for i, m in enumerate(df["manufacturer"].fillna("").tolist())]
-
-    fig = go.Figure()
-    fig.add_trace(go.Bar(
-        x=x_vals,
-        y=y_vals,
-        orientation="h",
-        marker=dict(color=colors, opacity=0.85),
-        text=df["gap_label"].tolist(),
-        textposition="outside",
-        textfont=dict(size=11, color=FONT_COLOR),
-        hovertemplate=(
-            "<b>%{y}</b><br>"
-            "Tiempo: %{x:.3f}s<br>"
-            "Gap lider: %{text}<extra></extra>"
-        ),
-    ))
-
-    x_min = min(x_vals)
-    x_max = max(x_vals)
-    x_range_margin = (x_max - x_min) * 0.15
-
-    fig.update_layout(**_base_layout(
-        title=dict(text=f"Tiempos de etapa — {stage_code}", font=dict(size=15)),
-        xaxis=dict(
-            title="Tiempo (s)",
-            gridcolor=GRID_COLOR,
-            range=[x_min * 0.998, x_max + x_range_margin],
-        ),
-        yaxis=dict(
-            gridcolor=GRID_COLOR,
-            # tickvals/ticktext fuerzan a Plotly a mostrar los nombres en el eje Y
-            tickmode="array",
-            tickvals=y_vals,
-            ticktext=y_vals,
-            automargin=True,
-        ),
-        height=max(300, len(df) * 38 + 80),
-        margin=dict(l=180, r=110, t=55, b=45),
-    ))
-    return fig
-
-
-# ── Grafico 2: Gap acumulado respecto al lider ────────────────────────────────
-
-def create_gap_evolution_chart(df: pd.DataFrame) -> go.Figure:
-    """
-    Line chart del gap acumulado respecto al lider etapa a etapa.
-    Eje X: etapas. Eje Y: segundos de diferencia.
-    """
-    if df.empty:
-        return go.Figure()
-
-    # Ordenar etapas cronologicamente
-    stage_order = df.drop_duplicates("stage_id").sort_values("stage_id")["stage_code"].tolist()
-
-    fig = go.Figure()
-    drivers = df.drop_duplicates("entry_id").sort_values("entry_id")
-
-    for i, row in drivers.iterrows():
-        entry_id = row["entry_id"]
-        code = row.get("driver_code", str(entry_id))
-        manufacturer = row.get("manufacturer", "")
-        color = _color(manufacturer, i)
-
-        d = df[df["entry_id"] == entry_id].copy()
-        d["stage_code"] = pd.Categorical(d["stage_code"], categories=stage_order, ordered=True)
-        d = d.sort_values("stage_code")
-
-        fig.add_trace(go.Scatter(
-            x=d["stage_code"].astype(str),
-            y=d["diff_first_s"].fillna(0),
-            mode="lines+markers",
-            name=code,
-            line=dict(color=color, width=2.5),
-            marker=dict(size=8, color=color, line=dict(width=1.5, color="white")),
-            hovertemplate=(
-                f"<b>{code}</b><br>"
-                "Etapa: %{x}<br>"
-                "Gap lider: +%{y:.1f}s<extra></extra>"
-            ),
-        ))
-
-    layout = _base_layout(
-        title=dict(text="Gap acumulado respecto al lider", font=dict(size=15)),
-        xaxis=dict(
-            title="Etapa",
-            type="category",
-            categoryorder="array",
-            categoryarray=stage_order,
-            gridcolor=GRID_COLOR,
-            tickfont=dict(size=12),
-        ),
-        yaxis=dict(
-            title="Diferencia (s)",
-            gridcolor=GRID_COLOR,
-            rangemode="tozero",
-        ),
-        height=400,
-    )
-    fig.update_layout(**layout)
-    return fig
-
-
-# ── Grafico 3: Evolucion de posiciones (bump chart) ───────────────────────────
-
-def create_position_evolution_chart(df: pd.DataFrame) -> go.Figure:
-    """
-    Bump chart: posicion de cada piloto en cada etapa.
-    Eje Y invertido (posicion 1 arriba). Eje X: etapas categoricas.
-    """
-    if df.empty:
-        return go.Figure()
-
-    stage_order = df.drop_duplicates("stage_id").sort_values("stage_id")["stage_code"].tolist()
-    n_drivers = df["entry_id"].nunique()
-
-    fig = go.Figure()
-    drivers = df.drop_duplicates("entry_id").sort_values("entry_id")
-
-    for i, row in drivers.iterrows():
-        entry_id = row["entry_id"]
-        code = row.get("driver_code", str(entry_id))
-        name = row.get("driver_name", code)
-        manufacturer = row.get("manufacturer", "")
-        color = _color(manufacturer, i)
-
-        d = df[df["entry_id"] == entry_id].copy()
-        d["stage_code"] = pd.Categorical(d["stage_code"], categories=stage_order, ordered=True)
-        d = d.sort_values("stage_code")
-
-        fig.add_trace(go.Scatter(
-            x=d["stage_code"].astype(str),
-            y=d["position"],
-            mode="lines+markers",
-            name=code,
-            line=dict(color=color, width=3),
-            marker=dict(
-                size=12, color=color,
-                line=dict(width=2, color="white"),
-                symbol="circle",
-            ),
-            hovertemplate=(
-                f"<b>{name}</b><br>"
-                "Etapa: %{x}<br>"
-                "Posicion: %{y}<extra></extra>"
-            ),
-        ))
-
-    layout = _base_layout(
-        title=dict(text="Evolucion de posiciones por etapa", font=dict(size=15)),
-        xaxis=dict(
-            title="Etapa",
-            type="category",
-            categoryorder="array",
-            categoryarray=stage_order,
-            gridcolor=GRID_COLOR,
-            tickfont=dict(size=13),
-        ),
-        yaxis=dict(
-            title="Posicion",
-            autorange="reversed",
-            tickmode="linear",
-            tick0=1,
-            dtick=1,
-            gridcolor=GRID_COLOR,
-            tickfont=dict(size=12),
-            range=[n_drivers + 0.5, 0.5],
-        ),
-        height=440,
-        margin=dict(l=10, r=10, t=55, b=45),
-    )
-    fig.update_layout(**layout)
-    return fig
-
-
-# ── Grafico 4: Comparativa entre dos pilotos ─────────────────────────────────
-
-def create_comparison_chart(
-    df_a: pd.DataFrame,
-    df_b: pd.DataFrame,
-    name_a: str,
-    name_b: str,
-    manufacturer_a: str = "",
-    manufacturer_b: str = "",
-) -> go.Figure:
-    """
-    Grouped bar chart: tiempos de etapa de dos pilotos lado a lado.
-    """
-    if df_a.empty or df_b.empty:
-        return go.Figure()
-
-    color_a = _color(manufacturer_a, 0)
-    color_b = _color(manufacturer_b, 1)
-
-    # Ordenar ambos DFs y convertir a listas Python para evitar problemas
-    # de alineacion por indice de pandas con go.Bar
-    sort_col = "stage_id" if "stage_id" in df_a.columns else "stage_code"
-    df_a = df_a.sort_values(sort_col).reset_index(drop=True)
-    df_b = df_b.sort_values(sort_col).reset_index(drop=True)
-
-    stages_a  = df_a["stage_code"].tolist()
-    stages_b  = df_b["stage_code"].tolist()
-    all_stages = sorted(set(stages_a) | set(stages_b))
-
-    fig = go.Figure()
-    fig.add_trace(go.Bar(
-        name=name_a,
-        x=stages_a,
-        y=df_a["time_s"].tolist(),
-        marker=dict(color=color_a, opacity=0.85),
-        hovertemplate=f"<b>{name_a}</b><br>Etapa: %{{x}}<br>Tiempo: %{{y:.3f}}s<extra></extra>",
-    ))
-    fig.add_trace(go.Bar(
-        name=name_b,
-        x=stages_b,
-        y=df_b["time_s"].tolist(),
-        marker=dict(color=color_b, opacity=0.85),
-        hovertemplate=f"<b>{name_b}</b><br>Etapa: %{{x}}<br>Tiempo: %{{y:.3f}}s<extra></extra>",
-    ))
-
-    fig.update_layout(**_base_layout(
-        title=dict(text=f"Comparativa: {name_a} vs {name_b}", font=dict(size=15)),
-        barmode="group",
-        xaxis=dict(
-            title="Etapa",
-            type="category",
-            categoryorder="array",
-            categoryarray=all_stages,
-            gridcolor=GRID_COLOR,
-            tickfont=dict(size=13),
-        ),
-        yaxis=dict(title="Tiempo (s)", gridcolor=GRID_COLOR),
-        height=380,
-    ))
-    return fig
-````
-
-## File: dashboard/pages/01_stages.py
-````python
-"""Pagina de etapas — tiempos por etapa con selector."""
-
-from __future__ import annotations
-import sys, os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
-import pandas as pd
-import streamlit as st
-
-from dashboard.components import api_client as api
-from dashboard.components.charts import create_stage_times_chart
-
-st.set_page_config(page_title="Etapas — Rally Analyzer", page_icon="⏱️", layout="wide")
-
-with st.sidebar:
-    st.markdown("## Rally Analyzer")
-    st.markdown("---")
-    st.page_link("app.py", label="Overview")
-    st.page_link("pages/01_stages.py", label="Etapas")
-    st.page_link("pages/02_evolution.py", label="Evolucion")
-    st.page_link("pages/03_compare.py", label="Comparativa")
-
-st.title("Tiempos por Etapa")
-st.divider()
-
-stages = api.get_stages()
-if not stages:
-    st.error("No se puede conectar con la API.")
-    st.stop()
-
-stage_options = {f"{s['stage_code']} — {s['name']} ({s['distance_km']} km)": s for s in stages}
-selected_label = st.selectbox("Selecciona una etapa", list(stage_options.keys()))
-selected_stage = stage_options[selected_label]
-stage_id   = selected_stage["stage_id"]
-stage_code = selected_stage["stage_code"]
-
-col1, col2, col3 = st.columns(3)
-with col1:
-    st.metric("Codigo", stage_code)
-with col2:
-    st.metric("Distancia", f"{selected_stage['distance_km']} km")
-with col3:
-    st.metric("Superficie", selected_stage.get("surface", "-"))
-
-st.divider()
-
-result = api.get_stage_times(stage_id)
-if not result or not result.get("entries"):
-    st.warning("No hay tiempos disponibles para esta etapa.")
-    st.stop()
-
-entries = result["entries"]
-df = pd.DataFrame(entries)
-
-fig = create_stage_times_chart(df, stage_code)
-st.plotly_chart(fig, use_container_width=True)
-
-st.markdown("### Tabla de tiempos")
-table_rows = []
-for e in entries:
-    gap  = e.get("diff_first_s", 0) or 0
-    prev = e.get("diff_prev_s", 0) or 0
-    table_rows.append({
-        "Pos.":        e["position"],
-        "Piloto":      e["driver_name"],
-        "#":           e.get("car_number", ""),
-        "Fabricante":  e.get("manufacturer", ""),
-        "Tiempo":      e.get("time_str", "-"),
-        "Gap lider":   "LIDER" if gap == 0 else f"+{gap:.3f}s",
-        "Gap anterior": "—" if prev == 0 else f"+{prev:.3f}s",
-    })
-
-st.dataframe(pd.DataFrame(table_rows), use_container_width=True, hide_index=True)
-````
-
-## File: dashboard/pages/02_evolution.py
-````python
-"""Pagina de evolucion — bump chart y gap acumulado."""
-
-from __future__ import annotations
-import sys, os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
-import pandas as pd
-import streamlit as st
-
-from dashboard.components import api_client as api
-from dashboard.components.charts import (
-    create_gap_evolution_chart,
-    create_position_evolution_chart,
-)
-
-st.set_page_config(page_title="Evolucion — Rally Analyzer", page_icon="📈", layout="wide")
-
-with st.sidebar:
-    st.markdown("## Rally Analyzer")
-    st.markdown("---")
-    st.page_link("app.py", label="Overview")
-    st.page_link("pages/01_stages.py", label="Etapas")
-    st.page_link("pages/02_evolution.py", label="Evolucion")
-    st.page_link("pages/03_compare.py", label="Comparativa")
-
-st.title("Evolucion del Rally")
-st.divider()
-
-evolution = api.get_evolution()
-if not evolution:
-    st.error("No se puede conectar con la API.")
-    st.stop()
-
-# Construir DataFrame plano
-rows = []
-for driver in evolution:
-    for pos in driver["positions"]:
-        rows.append({
-            "entry_id":    driver["entry_id"],
-            "driver_name": driver["driver_name"],
-            "driver_code": driver["driver_code"],
-            "manufacturer": driver["manufacturer"],
-            "stage_id":    pos["stage_id"],
-            "stage_code":  pos["stage_code"],
-            "position":    pos["position"],
-            "diff_first_s": pos.get("diff_first_s") or 0,
-        })
-
-df = pd.DataFrame(rows)
-
-if df.empty or df["stage_code"].str.strip().eq("").all():
-    st.warning("No hay datos de evolucion disponibles. Verifica que el pipeline se ejecuto correctamente.")
-    st.stop()
-
-# Filtro de pilotos
-all_drivers = sorted(df["driver_code"].unique())
-selected = st.multiselect("Filtrar pilotos (vacio = todos)", options=all_drivers, default=[])
-df_filtered = df[df["driver_code"].isin(selected)] if selected else df
-
-# Bump chart
-st.markdown("### Posicion a lo largo del rally")
-fig_bump = create_position_evolution_chart(df_filtered)
-st.plotly_chart(fig_bump, use_container_width=True)
-
-# Gap chart (excluir lider)
-st.markdown("### Gap acumulado respecto al lider")
-df_gap = df_filtered[df_filtered["diff_first_s"] > 0].copy()
-if df_gap.empty:
-    st.info("El lider no tiene gap. Selecciona otros pilotos para ver diferencias.")
-else:
-    fig_gap = create_gap_evolution_chart(df_gap)
-    st.plotly_chart(fig_gap, use_container_width=True)
-
-# Tabla pivot
-st.markdown("### Posiciones por etapa")
-try:
-    stage_order = df_filtered.drop_duplicates("stage_id").sort_values("stage_id")["stage_code"].tolist()
-    pivot = df_filtered.pivot_table(
-        index=["driver_code", "manufacturer"],
-        columns="stage_code",
-        values="position",
-        aggfunc="first",
-    ).reset_index()
-    pivot.columns.name = None
-    # Reordenar columnas por etapa
-    fixed_cols = ["driver_code", "manufacturer"]
-    stage_cols = [c for c in stage_order if c in pivot.columns]
-    pivot = pivot[fixed_cols + stage_cols]
-    st.dataframe(pivot, use_container_width=True, hide_index=True)
-except Exception:
-    pass
-````
-
-## File: dashboard/pages/03_compare.py
-````python
-"""Pagina de comparativa — dos pilotos cara a cara."""
-
-from __future__ import annotations
-import sys, os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
-import pandas as pd
-import streamlit as st
-
-from dashboard.components import api_client as api
-from dashboard.components.charts import create_comparison_chart
-
-st.set_page_config(page_title="Comparativa — Rally Analyzer", page_icon="🔀", layout="wide")
-
-with st.sidebar:
-    st.markdown("## Rally Analyzer")
-    st.markdown("---")
-    st.page_link("app.py", label="Overview")
-    st.page_link("pages/01_stages.py", label="Etapas")
-    st.page_link("pages/02_evolution.py", label="Evolucion")
-    st.page_link("pages/03_compare.py", label="Comparativa")
-
-st.title("Comparativa entre Pilotos")
-st.divider()
-
-drivers = api.get_drivers()
-if not drivers:
-    st.error("No se puede conectar con la API.")
-    st.stop()
-
-driver_options = {
-    f"{d['driver_name']} ({d['manufacturer']}) #{d['car_number']}": d
-    for d in drivers
-}
-driver_names = list(driver_options.keys())
-
-col1, col2 = st.columns(2)
-with col1:
-    sel_a = st.selectbox("Piloto A", driver_names, index=0)
-with col2:
-    sel_b = st.selectbox("Piloto B", driver_names, index=1)
-
-driver_a = driver_options[sel_a]
-driver_b = driver_options[sel_b]
-
-if driver_a["entry_id"] == driver_b["entry_id"]:
-    st.warning("Selecciona dos pilotos diferentes.")
-    st.stop()
-
-result = api.compare_drivers(driver_a["entry_id"], driver_b["entry_id"])
-if not result:
-    st.error("No se pudo obtener la comparativa.")
-    st.stop()
-
-times_a = result.get("stage_times_a", [])
-times_b = result.get("stage_times_b", [])
-
-df_a = pd.DataFrame(times_a)
-df_b = pd.DataFrame(times_b)
-
-if df_a.empty or df_b.empty:
-    st.warning("No hay datos de tiempos disponibles.")
-    st.stop()
-
-# ── KPIs ──────────────────────────────────────────────────────────────────────
-st.markdown(f"### {driver_a['driver_name']} vs {driver_b['driver_name']}")
-
-# Calcular victorias por etapa correctamente (un registro por etapa)
-df_a_sorted = df_a.sort_values("stage_code").reset_index(drop=True)
-df_b_sorted = df_b.sort_values("stage_code").reset_index(drop=True)
-
-wins_a = 0
-wins_b = 0
-for _, ra in df_a_sorted.iterrows():
-    match = df_b_sorted[df_b_sorted["stage_code"] == ra["stage_code"]]
-    if not match.empty:
-        ta = ra.get("time_s") or 9999
-        tb = match.iloc[0].get("time_s") or 9999
-        if ta < tb:
-            wins_a += 1
-        else:
-            wins_b += 1
-
-c1, c2, c3 = st.columns(3)
-with c1:
-    st.metric(f"Etapas ganadas — {driver_a['driver_code']}", wins_a)
-with c2:
-    st.metric(f"Etapas ganadas — {driver_b['driver_code']}", wins_b)
-with c3:
-    st.metric("Total etapas", len(df_a_sorted))
-
-st.divider()
-
-# ── Grafico ───────────────────────────────────────────────────────────────────
-fig = create_comparison_chart(
-    df_a_sorted, df_b_sorted,
-    driver_a["driver_name"], driver_b["driver_name"],
-    driver_a.get("manufacturer", ""), driver_b.get("manufacturer", ""),
-)
-st.plotly_chart(fig, use_container_width=True)
-
-# ── Tabla detallada (sin duplicados) ──────────────────────────────────────────
-st.markdown("### Detalle por etapa")
-
-rows = []
-for _, ra in df_a_sorted.iterrows():
-    stage = ra["stage_code"]
-    match = df_b_sorted[df_b_sorted["stage_code"] == stage]
-    if match.empty:
-        continue
-    rb = match.iloc[0]
-    ta = ra.get("time_s") or 0
-    tb = rb.get("time_s") or 0
-    diff = round(ta - tb, 3)
-    winner = driver_a["driver_code"] if ta < tb else driver_b["driver_code"]
-    rows.append({
-        "Etapa": stage,
-        f"Tiempo {driver_a['driver_code']} (s)": ta,
-        f"Tiempo {driver_b['driver_code']} (s)": tb,
-        "Diferencia (s)": diff,
-        "Ganador": winner,
-    })
-
-df_table = pd.DataFrame(rows)
-st.dataframe(df_table, use_container_width=True, hide_index=True)
 ````
 
 ## File: data/processed/.gitkeep
@@ -3029,155 +2297,176 @@ http://localhost:8000/drivers/compare?entry_a=201&entry_b=202
 *Siguiente: Bloque 3 — Dashboard Streamlit con gráficos Plotly.*
 ````
 
-## File: docs/bloque-03-dashboard.md
+## File: docs/bloque-04-graficos.md
 ````markdown
-# Bloque 3 — Dashboard Streamlit
+# Bloque 4 — Graficos Avanzados y Pulido Visual
 
-## Lecciones del Bloque 2
+## Lecciones del Bloque 3
 
-| Problema | Causa | Solución |
+| Problema | Causa | Solucion |
 |---|---|---|
-| `pydantic-settings` no estaba en `requirements.txt` | Se usaba en `config.py` pero faltaba la dependencia | Añadido `pydantic-settings==2.3.0` al `requirements.txt` |
-| Archivos del zip no reemplazan los existentes | Windows no sobreescribe sin confirmación | Copiar archivos manualmente en VSCode |
+| `utf-8 codec can't decode` en dashboard | Windows guarda archivos como cp1252 | `encoding="utf-8-sig"` al leer/escribir CSVs |
+| `ModuleNotFoundError: dashboard` en Streamlit | Streamlit ejecuta desde subcarpeta, root no esta en sys.path | `sys.path.insert(0, ...)` al inicio de cada pagina |
+| Archivo `app.py` corrupto | Windows corrompio emojis y caracteres al copiar del zip | Reescribir desde terminal con encoding UTF-8 explicito |
 
 ---
 
 ## Objetivo
 
-Construir el dashboard interactivo con Streamlit y Plotly que consume el backend
-del Bloque 2 y presenta los datos con gráficos interactivos y filtros dinámicos.
+Corregir todos los bugs visuales detectados en el Bloque 3 y pulir la calidad
+visual del dashboard para que quede a nivel de portfolio profesional.
 
 ---
 
-## Archivos creados / modificados
+## Bugs corregidos
 
-```
-dashboard/
-├── app.py                          ← modificado: página overview completa
-├── components/
-│   ├── api_client.py               ← nuevo: cliente HTTP al backend
-│   └── charts.py                  ← nuevo: gráficos Plotly reutilizables
-└── pages/
-    ├── 01_stages.py               ← nuevo: página de etapas
-    ├── 02_evolution.py            ← nuevo: página de evolución
-    └── 03_compare.py              ← nuevo: página de comparativa
+### Bug 1: Bump chart y gap chart comprimidos (root cause)
 
-ingestion/pipeline.py              ← modificado: encoding="utf-8-sig"
-backend/app/services/data_loader.py ← modificado: encoding="utf-8-sig"
-docs/
-└── bloque-03-dashboard.md         ← este archivo
+**Problema:** Todos los datos aparecian en una sola columna. El eje X no mostraba
+las etapas SS1-SS5.
+
+**Causa raiz:** Los CSVs generados por el pipeline incluyen la columna `stage_code`.
+Las funciones de `analytics.py` hacian un merge adicional con la tabla de stages
+(que tambien tiene `stage_code`), generando columnas duplicadas `stage_code_x`
+y `stage_code_y`. Al intentar acceder a `row["stage_code"]`, Pandas devolvia `""`
+porque la columna real era `stage_code_x`.
+
+**Solucion:** Eliminar el merge redundante en `analytics.py`. Si `stage_code` ya
+existe en el DataFrame, no volver a hacer merge con stages.
+
+```python
+# ANTES (bug)
+result = df.merge(stages[["stage_id", "stage_code"]], on="stage_id", how="left")
+# → crea stage_code_x y stage_code_y
+
+# DESPUES (fix)
+# stage_code ya existe en el CSV, no hace falta merge adicional
+result = df.copy()
 ```
+
+### Bug 2: Tabla comparativa con filas duplicadas
+
+**Problema:** La tabla de comparativa mostraba muchas filas repetidas con los
+mismos tiempos para el piloto A.
+
+**Causa:** El merge `df_a.merge(df_b, on="stage_code")` en `03_compare.py`
+generaba un producto cartesiano cuando los DataFrames tenian indices no alineados.
+
+**Solucion:** Reescribir la tabla iterando sobre las etapas del piloto A y haciendo
+lookup manual del piloto B, garantizando exactamente una fila por etapa.
+
+### Bug 3: Bar chart sin nombres de pilotos visibles
+
+**Problema:** El eje Y del bar chart de etapas no mostraba los nombres.
+
+**Causa:** La columna `y_label` no tenia `automargin=True` en el layout, cortando
+los nombres largos.
+
+**Solucion:** Añadir `automargin=True` al eje Y y ajustar `margin=dict(l=10, r=100)`.
+
+### Bug 4: Eje X categorico no respetado
+
+**Problema:** Plotly interpretaba los codigos de etapa (SS1, SS2...) como strings
+ordinarios, no como categorias ordenadas.
+
+**Solucion:** Usar `type="category"` y `categoryorder="array"` con el orden
+explicito en todos los graficos con eje X de etapas.
 
 ---
 
-## Arquitectura del dashboard
+## Mejoras visuales aplicadas
 
-```
-FastAPI (localhost:8000)
-        │  HTTP/JSON
-        ▼
-api_client.py       → encapsula todas las llamadas al backend
-        │  dicts/listas Python
-        ▼
-pages/*.py          → lógica de UI y transformación a DataFrames
-        │  DataFrames Pandas
-        ▼
-charts.py           → funciones Plotly → figuras
-        │  go.Figure
-        ▼
-st.plotly_chart()   → renderizado en el navegador
-```
+### Paleta de colores profesional
 
----
+Sustitucion de rojo/azul puros por colores motorsport mas sobrios:
 
-## Páginas del dashboard
-
-### Overview (`app.py`)
-- KPIs: nombre del rally, país, nº etapas, nº pilotos
-- Tabla de clasificación general final con gaps
-- Resumen por fabricante
-- Podio (Top 3)
-
-### Etapas (`pages/01_stages.py`)
-- Selector dinámico de etapa (código + nombre + distancia)
-- KPIs de la etapa: código, distancia, superficie
-- Bar chart horizontal con tiempos, coloreado por fabricante
-- Gap vs líder anotado en cada barra
-- Tabla detallada con gap vs líder y gap vs anterior
-
-### Evolución (`pages/02_evolution.py`)
-- Multiselect de pilotos (filtro dinámico)
-- Bump chart: posición de cada piloto etapa a etapa (eje Y invertido)
-- Gap chart: gap acumulado respecto al líder
-- Tabla pivot de posiciones por etapa
-
-### Comparativa (`pages/03_compare.py`)
-- Dos selectores de piloto
-- KPIs: etapas ganadas por cada piloto
-- Grouped bar chart con tiempos por etapa de ambos pilotos
-- Tabla detallada con diferencia por etapa y ganador
-
----
-
-## Componentes reutilizables
-
-### `charts.py`
-
-| Función | Gráfico | Descripción |
+| Fabricante | Color anterior | Color nuevo |
 |---|---|---|
-| `create_stage_times_chart()` | Bar horizontal | Tiempos de etapa con gap anotado |
-| `create_gap_evolution_chart()` | Line chart | Gap acumulado respecto al líder |
-| `create_position_evolution_chart()` | Bump chart | Posición etapa a etapa |
-| `create_comparison_chart()` | Grouped bar | Tiempos de dos pilotos |
+| Toyota | `#EB0A1E` (rojo puro) | `#C8102E` (rojo Toyota oficial) |
+| Hyundai | `#003399` (azul puro) | `#003B8E` (azul marino Hyundai) |
 
-### `api_client.py`
-Encapsula todas las llamadas HTTP al backend. Si la API no está disponible,
-devuelve listas/dicts vacíos en lugar de lanzar excepciones.
+### Layout base compartido
 
----
+Todos los graficos usan `_base_layout()` con configuracion consistente:
+- Fondo: `#FAFAFA` (casi blanco, no blanco puro)
+- Grid: `#E8E8E8` (gris muy suave)
+- Fuente: Inter/Arial, 12px, `#1A1A2E`
+- Hover: fondo blanco, borde suave
 
-## Lecciones del Bloque 3
+### Mejoras por grafico
 
-| Problema | Causa | Solución |
-|---|---|---|
-| `utf-8 codec can't decode byte 0xa1` en dashboard | Windows guardó los CSVs/archivos con encoding cp1252 en lugar de UTF-8 | Usar `encoding="utf-8-sig"` tanto al guardar CSVs (`pipeline.py`) como al leerlos (`data_loader.py`) |
-| El fix `encoding="latin-1"` no funcionó | El error seguía diciendo `utf-8 codec` porque Python seguía usando UTF-8 en otro lugar | La solución correcta es `utf-8-sig` en ambos lados (escritura y lectura) |
-| `dashboard/app.py` se corrompió al copiarlo del zip | Windows guardó el archivo con cp1252, corrompiendo emojis y caracteres especiales (`é`, `ó`, `ñ`, `─`) | Reescribir el archivo limpio desde terminal con `python -c "open(..., encoding='utf-8')"` o usar VSCode → Save with Encoding → UTF-8 |
-| `ModuleNotFoundError: No module named 'dashboard'` | Streamlit ejecuta `app.py` desde dentro de `dashboard/`, por lo que el módulo raíz no está en el path | Añadir al inicio de `app.py`: `sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))` |
-| `lru_cache` parecía cachear el error de encoding | Al reiniciar Streamlit sin reiniciar la API, la caché del data_loader podía tener estado inconsistente | Reiniciar siempre **ambos** procesos (API + Streamlit) después de cambios en `data_loader.py` |
-
-### Nota sobre encoding en Windows
-Windows usa por defecto `cp1252` (Windows-1252) para archivos de texto. Python en Windows también usa este encoding por defecto al abrir archivos sin especificarlo. El BOM de `utf-8-sig` le indica a Windows que el archivo es UTF-8, evitando el problema. **Regla:** siempre especificar `encoding="utf-8-sig"` al leer/escribir CSVs con caracteres especiales en proyectos Python en Windows.
-
----
-
-## Issues visuales detectados (a corregir en Bloque 4)
-
-| Issue | Descripción |
+| Grafico | Mejora |
 |---|---|
-| Bump chart comprimido | Todos los datos aparecen en una sola columna, el eje X no muestra las etapas |
-| Gap chart sin labels | El eje X e Y no muestran valores legibles |
-| Bar chart sin nombres | El eje Y del bar chart de etapas no muestra los nombres de los pilotos |
-| Comparativa tabla duplicada | El merge de la tabla de comparativa produce filas duplicadas |
-| Colores muy llamativos | Rojo/azul intensos no encajan con estética profesional de portfolio |
+| Bar chart etapas | `automargin=True` en eje Y, nombres completos visibles |
+| Bump chart | Eje X categorico ordenado, marcadores con borde blanco |
+| Gap chart | Eje Y con `rangemode="tozero"`, etapas ordenadas cronologicamente |
+| Comparativa | Tiempos ordenados por `stage_id`, sin duplicados |
 
 ---
 
-## Validaciones completadas
+## Archivos modificados
 
 ```
-V1 — Dashboard arranca sin errores    ✅
-V2 — Overview con clasificación       ✅
-V3 — Pagina Etapas con chart          ✅
-V4 — Pagina Evolucion                 ✅
-V5 — Pagina Comparativa               ✅
-GitHub repo creado y subido           ✅
-README actualizado                    ✅
+backend/app/services/analytics.py   ← fix: eliminar merge redundante de stage_code
+dashboard/components/charts.py      ← reescrito: paleta profesional + axes fixes
+dashboard/pages/01_stages.py        ← sys.path fix + mejoras menores
+dashboard/pages/02_evolution.py     ← sys.path fix + fix datos bump chart
+dashboard/pages/03_compare.py       ← fix tabla duplicada + fix wins calculation
+docs/bloque-04-graficos.md          ← este archivo
 ```
 
 ---
 
-*Siguiente: Bloque 4 — Graficos avanzados y pulido visual.*
+## Validaciones del Bloque 4
+
+### V1 — Tests siguen pasando
+```bash
+pytest backend/tests/ -v
+→ 51 passed
+```
+
+### V2 — Bump chart muestra todas las etapas
+```
+Pagina Evolucion → bump chart con SS1-SS5 en eje X
+→ Cada piloto tiene una linea continua a traves de las 5 etapas
+```
+
+### V3 — Gap chart con ejes correctos
+```
+Pagina Evolucion → gap chart
+→ Eje X: SS1-SS5. Eje Y: segundos. Lineas separadas por piloto
+```
+
+### V4 — Bar chart con nombres visibles
+```
+Pagina Etapas → bar chart
+→ Eje Y muestra "Nombre Piloto #XX" para cada barra
+```
+
+### V5 — Tabla comparativa sin duplicados
+```
+Pagina Comparativa → tabla detalle
+→ Exactamente 5 filas (una por etapa), sin repeticiones
+```
+
+### V6 — Paleta de colores profesional
+```
+Todos los graficos → colores sobrios, consistentes entre paginas
+```
+
+---
+
+## Posibles errores comunes
+
+| Error | Causa | Solucion |
+|---|---|---|
+| Graficos siguen en blanco | Cache del navegador | Ctrl+Shift+R para hard reload |
+| `stage_code` vacio en DataFrame | Pipeline antiguo sin la columna | `rm data/processed/*.csv && WRC_USE_MOCK=true python -m ingestion.pipeline` |
+| Bump chart con un solo punto | `stage_code` sigue siendo `stage_code_x` | Verificar que `analytics.py` esta actualizado |
+
+---
+
+*Siguiente: Bloque 5 — Pulido final, README y deploy.*
 ````
 
 ## File: ingestion/__init__.py
@@ -3472,181 +2761,6 @@ MOCK_OVERALL: dict[int, list[dict]] = {
         {"entryId": 206, "position": 6, "totalTimeMs": 4_045_700, "diffFirstMs": 57_200, "penaltyTimeMs": 0},
     ],
 }
-````
-
-## File: ingestion/pipeline.py
-````python
-"""
-Pipeline de ingesta de datos WRC.
-
-Uso:
-    python -m ingestion.pipeline                  # descarga temporada activa
-    python -m ingestion.pipeline --event-id 123   # descarga un evento concreto
-"""
-
-from __future__ import annotations
-
-import argparse
-import json
-import logging
-import sys
-from pathlib import Path
-
-import pandas as pd
-
-from ingestion import wrc_client as client
-from ingestion import transformers as tr
-
-# ── Logging ───────────────────────────────────────────────────────────────────
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s — %(message)s",
-    datefmt="%H:%M:%S",
-)
-logger = logging.getLogger("ingestion.pipeline")
-
-# ── Paths ─────────────────────────────────────────────────────────────────────
-_PROJECT_ROOT = Path(__file__).resolve().parents[1]
-RAW_DIR = _PROJECT_ROOT / "data" / "raw"
-PROCESSED_DIR = _PROJECT_ROOT / "data" / "processed"
-
-
-def _save_json(data: object, path: Path) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-    logger.info("JSON guardado → %s", path.name)
-
-
-def _save_csv(df: pd.DataFrame, path: Path) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    df.to_csv(path, index=False, encoding="utf-8")
-    logger.info("CSV guardado → %s (%d filas)", path.name, len(df))
-
-
-# ── Pasos del pipeline ────────────────────────────────────────────────────────
-
-def step_season() -> list[dict]:
-    """Paso 1: descarga y guarda los eventos de la temporada activa."""
-    logger.info("── Paso 1: temporada activa ──")
-    events = client.get_active_season()
-    _save_json(events, RAW_DIR / "season_events.json")
-    df = tr.transform_events(events)
-    _save_csv(df, PROCESSED_DIR / "events.csv")
-    return events
-
-
-def step_event(event_id: int, event_name: str) -> None:
-    """Paso 2: descarga y procesa un evento completo."""
-    logger.info("── Paso 2: evento %d (%s) ──", event_id, event_name)
-    safe_name = event_name.lower().replace(" ", "_")[:30]
-
-    # — Itinerario + etapas —
-    logger.info("  Descargando itinerario...")
-    itinerary = client.get_itinerary(event_id)
-    _save_json(itinerary, RAW_DIR / f"{safe_name}_itinerary.json")
-    stages_df = tr.transform_stages(itinerary)
-    _save_csv(stages_df, PROCESSED_DIR / f"{safe_name}_stages.csv")
-
-    if stages_df.empty:
-        logger.warning("  No se encontraron etapas para este evento.")
-        return
-
-    # — Entradas (pilotos) —
-    logger.info("  Descargando pilotos...")
-    try:
-        entries = client.get_entries(event_id)
-        _save_json(entries, RAW_DIR / f"{safe_name}_entries.json")
-        entries_df = tr.transform_entries(entries)
-        _save_csv(entries_df, PROCESSED_DIR / f"{safe_name}_entries.csv")
-    except Exception as e:
-        logger.warning("  No se pudieron descargar pilotos: %s", e)
-        entries_df = pd.DataFrame()
-
-    # — Tiempos de cada etapa —
-    all_stage_times: list[pd.DataFrame] = []
-    all_overall: list[pd.DataFrame] = []
-
-    stage_ids = stages_df["stage_id"].tolist()
-    logger.info("  Descargando tiempos de %d etapas...", len(stage_ids))
-
-    for stage_id in stage_ids:
-        stage_code = stages_df.loc[
-            stages_df["stage_id"] == stage_id, "stage_code"
-        ].values[0]
-        logger.info("    Etapa %s (id=%d)...", stage_code, stage_id)
-
-        try:
-            raw_times = client.get_stage_times(event_id, stage_id)
-            if raw_times:
-                df_times = tr.transform_stage_times(raw_times, stage_id, event_id)
-                df_times["stage_code"] = stage_code
-                all_stage_times.append(df_times)
-        except Exception as e:
-            logger.warning("    stage_times %d fallido: %s", stage_id, e)
-
-        try:
-            raw_overall = client.get_overall_results(event_id, stage_id)
-            if raw_overall:
-                df_overall = tr.transform_overall_results(raw_overall, stage_id, event_id)
-                df_overall["stage_code"] = stage_code
-                all_overall.append(df_overall)
-        except Exception as e:
-            logger.warning("    overall %d fallido: %s", stage_id, e)
-
-    # — Guardar consolidados —
-    if all_stage_times:
-        stage_times_df = pd.concat(all_stage_times, ignore_index=True)
-        _save_csv(stage_times_df, PROCESSED_DIR / f"{safe_name}_stage_times.csv")
-
-    if all_overall:
-        overall_df = pd.concat(all_overall, ignore_index=True)
-        _save_csv(overall_df, PROCESSED_DIR / f"{safe_name}_overall.csv")
-
-    logger.info("  Evento %s completado.", event_name)
-
-
-def run(event_id: int | None = None) -> None:
-    """Punto de entrada principal del pipeline."""
-    logger.info("═══ Rally Performance Analyzer — Pipeline de ingesta ═══")
-
-    events = step_season()
-
-    if not events:
-        logger.error("No se encontraron eventos en la temporada activa.")
-        sys.exit(1)
-
-    # Si se especifica un evento concreto, solo descargamos ese
-    if event_id is not None:
-        match = [e for e in events if e.get("id") == event_id]
-        if not match:
-            logger.error("Evento %d no encontrado en la temporada activa.", event_id)
-            sys.exit(1)
-        targets = match
-    else:
-        # Por defecto: solo el primer evento completado (status=Completed)
-        completed = [e for e in events if e.get("status") == "Completed"]
-        targets = completed[:1] if completed else events[:1]
-
-    for event in targets:
-        eid = event.get("id")
-        ename = event.get("name", f"event_{eid}")
-        step_event(eid, ename)
-
-    logger.info("═══ Pipeline finalizado ═══")
-
-
-# ── CLI ───────────────────────────────────────────────────────────────────────
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="WRC data ingestion pipeline")
-    parser.add_argument(
-        "--event-id",
-        type=int,
-        default=None,
-        help="ID del evento a descargar (por defecto: primer evento completado)",
-    )
-    args = parser.parse_args()
-    run(event_id=args.event_id)
 ````
 
 ## File: ingestion/transformers.py
@@ -4030,146 +3144,6 @@ python_functions = test_*
 addopts = -v --tb=short
 ````
 
-## File: README.md
-````markdown
-# Rally Performance Analyzer
-
-Dashboard interactivo para analizar tiempos y rendimiento en el **World Rally Championship (WRC)**.
-
-> Proyecto de portfolio — Análisis de datos / Motorsport
-
----
-
-## Stack tecnológico
-
-| Capa | Tecnología |
-|---|---|
-| Backend | Python · FastAPI · Uvicorn |
-| Dashboard | Streamlit |
-| Datos | Pandas · Numpy |
-| Visualización | Plotly |
-| Ingesta | httpx + mock data (estructura WRC oficial) |
-| Validación | Pydantic v2 |
-| Tests | Pytest |
-
----
-
-## Funcionalidades
-
-- Clasificación general del rally con tiempos y gaps
-- Tiempos por etapa con gap vs líder (bar chart interactivo)
-- Evolución de posiciones a lo largo del rally (bump chart)
-- Gap acumulado respecto al líder
-- Comparativa entre dos pilotos por etapa
-- Filtros dinámicos de pilotos
-- API REST documentada con Swagger
-
----
-
-## Arquitectura
-
-```
-mock_data / WRC API
-      |
-      v
-ingestion/pipeline.py   (httpx + Pandas)
-      |
-      v
-data/processed/*.csv
-      |
-      v
-backend/ FastAPI        (endpoints REST)
-      |
-      v
-dashboard/ Streamlit    (Plotly charts)
-```
-
----
-
-## Cómo ejecutar
-
-```bash
-# 1. Crear entorno virtual con Python 3.11 (obligatorio)
-py -3.11 -m venv venv
-source venv/Scripts/activate   # Windows Git Bash
-# o: venv\Scripts\activate     # Windows CMD
-
-# 2. Instalar dependencias
-pip install -r requirements.txt --trusted-host pypi.org --trusted-host files.pythonhosted.org
-
-# 3. Configurar entorno
-cp .env.example .env
-
-# 4. Generar datos
-WRC_USE_MOCK=true python -m ingestion.pipeline
-
-# 5. Terminal 1 — API
-uvicorn backend.app.main:app --reload
-
-# 6. Terminal 2 — Dashboard
-streamlit run dashboard/app.py
-```
-
-- API: http://localhost:8000/docs
-- Dashboard: http://localhost:8501
-
----
-
-## Tests
-
-```bash
-pytest backend/tests/ -v
-# 51 tests passed
-```
-
----
-
-## Nota sobre los datos
-
-La API oficial `api.wrc.com` fue dada de baja por WRC durante el desarrollo.
-Los datos mock siguen la estructura exacta de la API original e incluyen el
-Rally Monte Carlo 2024 con 6 pilotos reales, 5 etapas y tiempos basados en
-ritmos reales del WRC (~1 min/km en tarmac).
-
-Para usar datos reales cuando la API vuelva a estar disponible:
-```bash
-WRC_USE_MOCK=false python -m ingestion.pipeline
-```
-
----
-
-## Problemas conocidos y soluciones
-
-| Problema | Causa | Solución |
-|---|---|---|
-| `pydantic-core` falla al instalar | Python 3.14 sin wheels | Usar Python 3.11 |
-| `SSLError` en pip | Red corporativa con proxy | `--trusted-host pypi.org --trusted-host files.pythonhosted.org` |
-| `ModuleNotFoundError: backend` en pytest | pytest no encuentra el root | `conftest.py` vacío en raíz + `backend/__init__.py` |
-| `api.wrc.com` no resuelve | Dominio dado de baja | Mock data con estructura idéntica |
-| `WRC_USE_MOCK` ignorado | `.env` se carga tarde | Pasar inline: `WRC_USE_MOCK=true python -m ...` |
-| `utf-8 codec can't decode` en dashboard | Windows guarda archivos como cp1252 | Guardar archivos Python con encoding UTF-8 explícito |
-| `ModuleNotFoundError: dashboard` en Streamlit | Streamlit ejecuta desde subcarpeta | `sys.path.insert` al inicio de `app.py` |
-
----
-
-## Estado del proyecto
-
-| Bloque | Descripción | Estado |
-|---|---|---|
-| 0 | Setup del proyecto | Completado |
-| 1 | Ingesta de datos WRC | Completado |
-| 2 | Backend FastAPI | Completado |
-| 3 | Dashboard base | Completado |
-| 4 | Gráficos avanzados | Pendiente |
-| 5 | Pulido y deploy | Pendiente |
-
----
-
-## Documentación
-
-Ver `docs/` para la documentación detallada de cada bloque implementado.
-````
-
 ## File: requirements.txt
 ````
 # ── Web framework ─────────────────────────────────────────────────
@@ -4200,4 +3174,1408 @@ httpx==0.27.0          # also used as AsyncClient in tests
 
 # ── Utilities ─────────────────────────────────────────────────────
 python-dotenv==1.0.1
+````
+
+## File: backend/app/services/analytics.py
+````python
+"""
+Servicio de analitica.
+
+Funciones de calculo y transformacion sobre los DataFrames cargados.
+"""
+
+from __future__ import annotations
+
+import logging
+
+import pandas as pd
+
+from backend.app.services import data_loader as loader
+
+logger = logging.getLogger(__name__)
+
+
+def get_stage_result(stage_id: int) -> pd.DataFrame:
+    """Tiempos enriquecidos de una etapa concreta, ordenados por posicion."""
+    df = loader.get_stage_times_enriched()
+    if df.empty:
+        return df
+    result = df[df["stage_id"] == stage_id].sort_values("position")
+    return result.reset_index(drop=True)
+
+
+def get_overall_at_stage(stage_id: int) -> pd.DataFrame:
+    """Clasificacion general enriquecida tras una etapa concreta."""
+    df = loader.get_overall_enriched()
+    if df.empty:
+        return df
+    result = df[df["stage_id"] == stage_id].sort_values("position")
+    return result.reset_index(drop=True)
+
+
+def get_final_classification() -> pd.DataFrame:
+    """Clasificacion final del rally (tras la ultima etapa)."""
+    df = loader.get_overall_enriched()
+    if df.empty:
+        return df
+    last_stage = df["stage_id"].max()
+    return get_overall_at_stage(last_stage)
+
+
+def get_driver_evolution(entry_id: int) -> pd.DataFrame:
+    """Evolucion de posicion de un piloto etapa a etapa."""
+    df = loader.get_overall_enriched()
+    if df.empty:
+        return df
+    # stage_code ya existe en el CSV — no hace falta merge adicional
+    result = df[df["entry_id"] == entry_id].copy()
+    return result.sort_values("stage_id").reset_index(drop=True)
+
+
+def get_all_drivers_evolution() -> pd.DataFrame:
+    """Evolucion de posicion de todos los pilotos (bump chart)."""
+    df = loader.get_overall_enriched()
+    if df.empty:
+        return df
+    # stage_code ya existe en el CSV — no hace falta merge adicional
+    # Solo aseguramos que la columna existe; si no, usamos stage_id como fallback
+    if "stage_code" not in df.columns:
+        stages = loader.get_stages()[["stage_id", "stage_code"]].copy()
+        df = df.merge(stages, on="stage_id", how="left")
+    return df.sort_values(["entry_id", "stage_id"]).reset_index(drop=True)
+
+
+def get_driver_comparison(entry_id_a: int, entry_id_b: int) -> dict:
+    """Tiempos por etapa de dos pilotos para comparativa."""
+    times = loader.get_stage_times_enriched()
+
+    def _get_driver_times(entry_id: int) -> pd.DataFrame:
+        df = times[times["entry_id"] == entry_id].copy()
+        # stage_code ya existe en el CSV — no hace falta merge adicional
+        if "stage_code" not in df.columns:
+            stages = loader.get_stages()[["stage_id", "stage_code"]]
+            df = df.merge(stages, on="stage_id", how="left")
+        return df.sort_values("stage_id").reset_index(drop=True)
+
+    return {
+        "driver_a": _get_driver_times(entry_id_a),
+        "driver_b": _get_driver_times(entry_id_b),
+    }
+````
+
+## File: backend/app/services/data_loader.py
+````python
+"""
+Servicio de carga de datos.
+
+Carga los CSVs procesados como DataFrames de Pandas y los cachea en memoria.
+Se inicializa una sola vez al arrancar la API.
+"""
+
+from __future__ import annotations
+
+import logging
+from functools import lru_cache
+from pathlib import Path
+
+import pandas as pd
+
+logger = logging.getLogger(__name__)
+
+# ── Paths ─────────────────────────────────────────────────────────────────────
+_PROJECT_ROOT = Path(__file__).resolve().parents[3]
+_PROCESSED_DIR = _PROJECT_ROOT / "data" / "processed"
+
+# Prefijo del evento principal (Monte Carlo)
+_EVENT_PREFIX = "rallye_automobile_monte_carlo"
+
+
+def _load_csv(filename: str) -> pd.DataFrame:
+    """Carga un CSV desde data/processed/ con manejo de errores."""
+    path = _PROCESSED_DIR / filename
+    if not path.exists():
+        logger.warning("CSV no encontrado: %s — devolviendo DataFrame vacío", filename)
+        return pd.DataFrame()
+    df = pd.read_csv(path)
+    logger.info("CSV cargado: %s (%d filas)", filename, len(df))
+    return df
+
+
+# ── Carga de datos ────────────────────────────────────────────────────────────
+
+@lru_cache(maxsize=1)
+def get_events() -> pd.DataFrame:
+    """Devuelve los eventos de la temporada."""
+    return _load_csv("events.csv")
+
+
+@lru_cache(maxsize=1)
+def get_stages() -> pd.DataFrame:
+    """Devuelve las etapas del rally principal."""
+    return _load_csv(f"{_EVENT_PREFIX}_stages.csv")
+
+
+@lru_cache(maxsize=1)
+def get_entries() -> pd.DataFrame:
+    """Devuelve los pilotos inscritos."""
+    return _load_csv(f"{_EVENT_PREFIX}_entries.csv")
+
+
+@lru_cache(maxsize=1)
+def get_stage_times() -> pd.DataFrame:
+    """Devuelve todos los tiempos de etapa."""
+    return _load_csv(f"{_EVENT_PREFIX}_stage_times.csv")
+
+
+@lru_cache(maxsize=1)
+def get_overall() -> pd.DataFrame:
+    """Devuelve la clasificación general acumulada."""
+    return _load_csv(f"{_EVENT_PREFIX}_overall.csv")
+
+
+def get_stage_times_enriched() -> pd.DataFrame:
+    """
+    Devuelve tiempos de etapa enriquecidos con datos del piloto.
+
+    Join entre stage_times y entries por entry_id.
+    """
+    times = get_stage_times().copy()
+    entries = get_entries()[
+        ["entry_id", "driver_name", "driver_code", "manufacturer", "car_number"]
+    ]
+    if times.empty or entries.empty:
+        return times
+    return times.merge(entries, on="entry_id", how="left")
+
+
+def get_overall_enriched() -> pd.DataFrame:
+    """
+    Devuelve clasificación general enriquecida con datos del piloto.
+    """
+    overall = get_overall().copy()
+    entries = get_entries()[
+        ["entry_id", "driver_name", "driver_code", "manufacturer", "car_number"]
+    ]
+    if overall.empty or entries.empty:
+        return overall
+    return overall.merge(entries, on="entry_id", how="left")
+
+
+def clear_cache() -> None:
+    """Limpia la caché (útil para tests o recarga de datos)."""
+    get_events.cache_clear()
+    get_stages.cache_clear()
+    get_entries.cache_clear()
+    get_stage_times.cache_clear()
+    get_overall.cache_clear()
+    logger.info("Caché de datos limpiada")
+````
+
+## File: dashboard/app.py
+````python
+from __future__ import annotations
+import sys, os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+import pandas as pd
+import streamlit as st
+from dashboard.components import api_client as api
+
+st.set_page_config(page_title="Rally Performance Analyzer", layout="wide", initial_sidebar_state="expanded")
+
+with st.sidebar:
+    st.markdown("## Rally Analyzer")
+    st.markdown("---")
+    st.page_link("app.py", label="Overview")
+    st.page_link("pages/01_stages.py", label="Etapas")
+    st.page_link("pages/02_evolution.py", label="Evolucion")
+    st.page_link("pages/03_compare.py", label="Comparativa")
+    st.markdown("---")
+    st.caption("Datos: Rally Monte Carlo 2024")
+
+st.title("Rally Performance Analyzer")
+st.markdown("**World Rally Championship - Analisis de datos**")
+st.divider()
+
+rallies = api.get_rallies()
+classification = api.get_classification()
+stages = api.get_stages()
+drivers = api.get_drivers()
+
+if not rallies or not classification:
+    st.error("No se puede conectar con la API. Arranca FastAPI primero.")
+    st.code("uvicorn backend.app.main:app --reload")
+    st.stop()
+
+rally = rallies[0]
+entries = classification.get("entries", [])
+
+col1, col2, col3, col4 = st.columns(4)
+with col1:
+    st.metric("Rally", rally["name"].replace("Rallye Automobile ", ""))
+with col2:
+    st.metric("Pais", rally["country"])
+with col3:
+    st.metric("Etapas", len(stages))
+with col4:
+    st.metric("Pilotos", len(drivers))
+
+st.divider()
+col_left, col_right = st.columns([3, 2])
+
+with col_left:
+    st.markdown("### Clasificacion General Final")
+    if entries:
+        rows = []
+        for e in entries:
+            gap = e.get("diff_first_s", 0) or 0
+            gap_str = "LIDER" if gap == 0 else f"+{gap:.1f}s"
+            rows.append({"Pos.": e["position"], "Piloto": e["driver_name"], "#": e.get("car_number", ""), "Fabricante": e.get("manufacturer", ""), "Tiempo total": e.get("total_time_str", "-"), "Gap": gap_str})
+        st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
+
+with col_right:
+    st.markdown("### Fabricantes")
+    fab_data = {}
+    for e in entries:
+        fab = e.get("manufacturer", "Otro")
+        fab_data[fab] = fab_data.get(fab, 0) + 1
+    for fab, count in sorted(fab_data.items()):
+        st.markdown(f"**{fab}** - {count} pilotos")
+    st.markdown("---")
+    st.markdown("### Podio")
+    medals = ["1.", "2.", "3."]
+    for e in entries[:3]:
+        gap = e.get("diff_first_s", 0) or 0
+        gap_str = "LIDER" if gap == 0 else f"+{gap:.1f}s"
+        st.markdown(f"{medals[e['position']-1]} **{e['driver_name']}** ({e.get('manufacturer','')}) - {gap_str}")
+````
+
+## File: dashboard/components/charts.py
+````python
+"""
+Graficos Plotly reutilizables para el dashboard.
+
+Paleta profesional motorsport. Todas las funciones reciben un DataFrame
+y devuelven un go.Figure listo para st.plotly_chart().
+"""
+
+from __future__ import annotations
+
+import plotly.graph_objects as go
+import pandas as pd
+
+# ── Paleta coordinada con tema oscuro (config.toml base=dark) ─────────────────
+# 20 colores visualmente distintos entre si, legibles sobre fondo oscuro.
+# Se asignan por posicion de iteracion (no por fabricante) para que cada
+# piloto tenga siempre un color unico aunque comparta equipo.
+DRIVER_COLORS = [
+    "#FF4B4B",  # rojo vivo
+    "#4CC9F0",  # azul electrico
+    "#F8961E",  # naranja
+    "#7BF1A8",  # verde menta
+    "#BB8FCE",  # lavanda
+    "#FEE440",  # amarillo
+    "#00F5D4",  # cyan
+    "#9B5DE5",  # violeta
+    "#F72585",  # rosa fuerte
+    "#4361EE",  # azul indigo
+    "#FB5607",  # naranja rojizo
+    "#FFBE0B",  # ambar
+    "#06D6A0",  # esmeralda
+    "#EF233C",  # rojo carmesi
+    "#8338EC",  # purpura
+    "#3BF4FB",  # turquesa
+    "#E9FF70",  # lima
+    "#FF9F1C",  # mandarina
+    "#2EC4B6",  # teal
+    "#FF6FA8",  # rosa salmon
+]
+
+# Solo para la comparativa de dos pilotos donde el equipo aporta contexto visual
+MANUFACTURER_COLORS: dict[str, str] = {
+    "Toyota":  "#FF4B4B",
+    "Hyundai": "#4CC9F0",
+    "Ford":    "#F8961E",
+    "Citroen": "#7BF1A8",
+}
+
+GRID_COLOR  = "#2D2D4E"
+BG_COLOR    = "rgba(0,0,0,0)"   # transparente — hereda el fondo oscuro de Streamlit
+FONT_COLOR  = "#FFFFFF"
+FONT_FAMILY = "Inter, Arial, sans-serif"
+
+
+def _driver_color(idx: int) -> str:
+    return DRIVER_COLORS[idx % len(DRIVER_COLORS)]
+
+
+def _manufacturer_color(manufacturer: str, idx: int = 0) -> str:
+    return MANUFACTURER_COLORS.get(manufacturer, DRIVER_COLORS[idx % len(DRIVER_COLORS)])
+
+
+def _base_layout(**kwargs) -> dict:
+    """Layout base compartido por todos los graficos."""
+    _axis = dict(
+        gridcolor=GRID_COLOR,
+        linecolor="#404060",
+        tickfont=dict(color=FONT_COLOR),
+        title_font=dict(color=FONT_COLOR),
+    )
+    base = dict(
+        plot_bgcolor=BG_COLOR,
+        paper_bgcolor="rgba(0,0,0,0)",
+        font=dict(family=FONT_FAMILY, size=12, color=FONT_COLOR),
+        xaxis=_axis,
+        yaxis=_axis,
+        legend=dict(
+            orientation="h", yanchor="bottom", y=1.02,
+            xanchor="right", x=1, font=dict(size=11, color=FONT_COLOR),
+        ),
+        margin=dict(l=10, r=90, t=55, b=45),
+        hoverlabel=dict(bgcolor="#1A1A2E", font_size=12, font_color=FONT_COLOR),
+    )
+    base.update(kwargs)
+    return base
+
+
+# ── Grafico 1: Tiempos de etapa (bar horizontal) ──────────────────────────────
+
+def create_stage_times_chart(df: pd.DataFrame, stage_code: str) -> go.Figure:
+    """
+    Bar chart horizontal de tiempos por etapa.
+    Eje Y: nombre del piloto + fabricante. Eje X: tiempo en segundos.
+    """
+    if df.empty:
+        return go.Figure()
+
+    df = df.sort_values("position", ascending=False).copy()
+
+    df["y_label"] = df.apply(
+        lambda r: f"{r.get('driver_name','?')}  #{r.get('car_number','')}", axis=1
+    )
+    df["gap_label"] = df["diff_first_s"].apply(
+        lambda x: "LIDER" if (x == 0 or pd.isna(x)) else f"+{x:.3f}s"
+    )
+
+    # Color unico por piloto segun su posicion en el ranking
+    colors = [_driver_color(i) for i in range(len(df))]
+
+    fig = go.Figure()
+    fig.add_trace(go.Bar(
+        x=df["time_s"],
+        y=df["y_label"],
+        orientation="h",
+        marker=dict(color=colors, opacity=0.85),
+        text=df["gap_label"],
+        textposition="outside",
+        textfont=dict(size=11, color=FONT_COLOR),
+        hovertemplate=(
+            "<b>%{y}</b><br>"
+            "Tiempo: %{x:.3f}s<br>"
+            "Gap lider: %{text}<extra></extra>"
+        ),
+    ))
+
+    x_min = df["time_s"].min()
+    x_max = df["time_s"].max()
+    margin = (x_max - x_min) * 0.15
+
+    layout = _base_layout(
+        title=dict(text=f"Tiempos de etapa — {stage_code}", font=dict(size=15, color=FONT_COLOR)),
+        xaxis=dict(
+            title="Tiempo (s)",
+            gridcolor=GRID_COLOR,
+            tickfont=dict(color=FONT_COLOR),
+            title_font=dict(color=FONT_COLOR),
+            range=[x_min * 0.998, x_max + margin],
+        ),
+        yaxis=dict(
+            title="",
+            gridcolor=GRID_COLOR,
+            tickfont=dict(color=FONT_COLOR),
+            automargin=True,
+        ),
+        height=350,
+        margin=dict(l=10, r=100, t=50, b=45),
+    )
+    fig.update_layout(**layout)
+    return fig
+
+
+# ── Grafico 2: Gap acumulado respecto al lider ────────────────────────────────
+
+def create_gap_evolution_chart(df: pd.DataFrame) -> go.Figure:
+    """
+    Line chart del gap acumulado respecto al lider etapa a etapa.
+    Eje X: etapas. Eje Y: segundos de diferencia.
+    """
+    if df.empty:
+        return go.Figure()
+
+    stage_order = df.drop_duplicates("stage_id").sort_values("stage_id")["stage_code"].tolist()
+
+    fig = go.Figure()
+    drivers = df.drop_duplicates("entry_id").sort_values("entry_id")
+
+    for idx, (_, row) in enumerate(drivers.iterrows()):
+        entry_id = row["entry_id"]
+        code = row.get("driver_code", str(entry_id))
+        color = _driver_color(idx)
+
+        d = df[df["entry_id"] == entry_id].copy()
+        d["stage_code"] = pd.Categorical(d["stage_code"], categories=stage_order, ordered=True)
+        d = d.sort_values("stage_code")
+
+        fig.add_trace(go.Scatter(
+            x=d["stage_code"].astype(str),
+            y=d["diff_first_s"].fillna(0),
+            mode="lines+markers",
+            name=code,
+            line=dict(color=color, width=2.5),
+            marker=dict(size=8, color=color, line=dict(width=1.5, color="white")),
+            hovertemplate=(
+                f"<b>{code}</b><br>"
+                "Etapa: %{x}<br>"
+                "Gap lider: +%{y:.1f}s<extra></extra>"
+            ),
+        ))
+
+    layout = _base_layout(
+        title=dict(text="Gap acumulado respecto al lider", font=dict(size=15, color=FONT_COLOR)),
+        xaxis=dict(
+            title="Etapa",
+            type="category",
+            categoryorder="array",
+            categoryarray=stage_order,
+            gridcolor=GRID_COLOR,
+            tickfont=dict(size=12, color=FONT_COLOR),
+            title_font=dict(color=FONT_COLOR),
+        ),
+        yaxis=dict(
+            title="Diferencia (s)",
+            gridcolor=GRID_COLOR,
+            tickfont=dict(color=FONT_COLOR),
+            title_font=dict(color=FONT_COLOR),
+            rangemode="tozero",
+        ),
+        height=400,
+    )
+    fig.update_layout(**layout)
+    return fig
+
+
+# ── Grafico 3: Evolucion de posiciones (bump chart) ───────────────────────────
+
+def create_position_evolution_chart(df: pd.DataFrame) -> go.Figure:
+    """
+    Bump chart: posicion de cada piloto en cada etapa.
+    Eje Y invertido (posicion 1 arriba). Eje X: etapas categoricas.
+    """
+    if df.empty:
+        return go.Figure()
+
+    stage_order = df.drop_duplicates("stage_id").sort_values("stage_id")["stage_code"].tolist()
+    n_drivers = df["entry_id"].nunique()
+
+    fig = go.Figure()
+    drivers = df.drop_duplicates("entry_id").sort_values("entry_id")
+
+    for idx, (_, row) in enumerate(drivers.iterrows()):
+        entry_id = row["entry_id"]
+        code = row.get("driver_code", str(entry_id))
+        name = row.get("driver_name", code)
+        color = _driver_color(idx)
+
+        d = df[df["entry_id"] == entry_id].copy()
+        d["stage_code"] = pd.Categorical(d["stage_code"], categories=stage_order, ordered=True)
+        d = d.sort_values("stage_code")
+
+        fig.add_trace(go.Scatter(
+            x=d["stage_code"].astype(str),
+            y=d["position"],
+            mode="lines+markers",
+            name=code,
+            line=dict(color=color, width=3),
+            marker=dict(
+                size=12, color=color,
+                line=dict(width=2, color="white"),
+                symbol="circle",
+            ),
+            hovertemplate=(
+                f"<b>{name}</b><br>"
+                "Etapa: %{x}<br>"
+                "Posicion: %{y}<extra></extra>"
+            ),
+        ))
+
+    layout = _base_layout(
+        title=dict(text="Evolucion de posiciones por etapa", font=dict(size=15, color=FONT_COLOR)),
+        xaxis=dict(
+            title="Etapa",
+            type="category",
+            categoryorder="array",
+            categoryarray=stage_order,
+            gridcolor=GRID_COLOR,
+            tickfont=dict(size=13, color=FONT_COLOR),
+            title_font=dict(color=FONT_COLOR),
+        ),
+        yaxis=dict(
+            title="Posicion",
+            autorange="reversed",
+            tickmode="linear",
+            tick0=1,
+            dtick=1,
+            gridcolor=GRID_COLOR,
+            tickfont=dict(size=12, color=FONT_COLOR),
+            title_font=dict(color=FONT_COLOR),
+            range=[n_drivers + 0.5, 0.5],
+        ),
+        height=440,
+        margin=dict(l=10, r=10, t=55, b=45),
+    )
+    fig.update_layout(**layout)
+    return fig
+
+
+# ── Grafico 4: Comparativa entre dos pilotos ─────────────────────────────────
+
+def create_comparison_chart(
+    df_a: pd.DataFrame,
+    df_b: pd.DataFrame,
+    name_a: str,
+    name_b: str,
+    manufacturer_a: str = "",
+    manufacturer_b: str = "",
+) -> go.Figure:
+    """
+    Grouped bar chart: tiempos de etapa de dos pilotos lado a lado.
+    Aqui si se usan colores de fabricante porque el contexto visual aporta informacion.
+    """
+    if df_a.empty or df_b.empty:
+        return go.Figure()
+
+    color_a = _manufacturer_color(manufacturer_a, 0)
+    color_b = _manufacturer_color(manufacturer_b, 1)
+
+    stage_order = df_a.sort_values("stage_id")["stage_code"].tolist() if "stage_id" in df_a.columns \
+        else df_a["stage_code"].tolist()
+
+    fig = go.Figure()
+    fig.add_trace(go.Bar(
+        name=name_a,
+        x=df_a.sort_values("stage_id")["stage_code"] if "stage_id" in df_a.columns else df_a["stage_code"],
+        y=df_a.sort_values("stage_id")["time_s"] if "stage_id" in df_a.columns else df_a["time_s"],
+        marker=dict(color=color_a, opacity=0.85),
+        hovertemplate=f"<b>{name_a}</b><br>Etapa: %{{x}}<br>Tiempo: %{{y:.3f}}s<extra></extra>",
+    ))
+    fig.add_trace(go.Bar(
+        name=name_b,
+        x=df_b.sort_values("stage_id")["stage_code"] if "stage_id" in df_b.columns else df_b["stage_code"],
+        y=df_b.sort_values("stage_id")["time_s"] if "stage_id" in df_b.columns else df_b["time_s"],
+        marker=dict(color=color_b, opacity=0.85),
+        hovertemplate=f"<b>{name_b}</b><br>Etapa: %{{x}}<br>Tiempo: %{{y:.3f}}s<extra></extra>",
+    ))
+
+    layout = _base_layout(
+        title=dict(text=f"Comparativa: {name_a} vs {name_b}", font=dict(size=15, color=FONT_COLOR)),
+        barmode="group",
+        xaxis=dict(
+            title="Etapa",
+            type="category",
+            categoryorder="array",
+            categoryarray=stage_order,
+            gridcolor=GRID_COLOR,
+            tickfont=dict(size=13, color=FONT_COLOR),
+            title_font=dict(color=FONT_COLOR),
+        ),
+        yaxis=dict(
+            title="Tiempo (s)",
+            gridcolor=GRID_COLOR,
+            tickfont=dict(color=FONT_COLOR),
+            title_font=dict(color=FONT_COLOR),
+        ),
+        height=380,
+    )
+    fig.update_layout(**layout)
+    return fig
+````
+
+## File: dashboard/pages/01_stages.py
+````python
+"""Pagina de etapas — tiempos por etapa con selector."""
+
+from __future__ import annotations
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+import pandas as pd
+import streamlit as st
+
+from dashboard.components import api_client as api
+from dashboard.components.charts import create_stage_times_chart
+
+st.set_page_config(page_title="Etapas — Rally Analyzer", page_icon="⏱️", layout="wide")
+
+with st.sidebar:
+    st.markdown("## Rally Analyzer")
+    st.markdown("---")
+    st.page_link("app.py", label="Overview")
+    st.page_link("pages/01_stages.py", label="Etapas")
+    st.page_link("pages/02_evolution.py", label="Evolucion")
+    st.page_link("pages/03_compare.py", label="Comparativa")
+
+st.title("Tiempos por Etapa")
+st.divider()
+
+stages = api.get_stages()
+if not stages:
+    st.error("No se puede conectar con la API.")
+    st.stop()
+
+stage_options = {f"{s['stage_code']} — {s['name']} ({s['distance_km']} km)": s for s in stages}
+selected_label = st.selectbox("Selecciona una etapa", list(stage_options.keys()))
+selected_stage = stage_options[selected_label]
+stage_id   = selected_stage["stage_id"]
+stage_code = selected_stage["stage_code"]
+
+col1, col2, col3 = st.columns(3)
+with col1:
+    st.metric("Codigo", stage_code)
+with col2:
+    st.metric("Distancia", f"{selected_stage['distance_km']} km")
+with col3:
+    st.metric("Superficie", selected_stage.get("surface", "-"))
+
+st.divider()
+
+result = api.get_stage_times(stage_id)
+if not result or not result.get("entries"):
+    st.warning("No hay tiempos disponibles para esta etapa.")
+    st.stop()
+
+entries = result["entries"]
+df = pd.DataFrame(entries)
+
+fig = create_stage_times_chart(df, stage_code)
+st.plotly_chart(fig, use_container_width=True)
+
+st.markdown("### Tabla de tiempos")
+table_rows = []
+for e in entries:
+    gap  = e.get("diff_first_s", 0) or 0
+    prev = e.get("diff_prev_s", 0) or 0
+    table_rows.append({
+        "Pos.":        e["position"],
+        "Piloto":      e["driver_name"],
+        "#":           e.get("car_number", ""),
+        "Fabricante":  e.get("manufacturer", ""),
+        "Tiempo":      e.get("time_str", "-"),
+        "Gap lider":   "LIDER" if gap == 0 else f"+{gap:.3f}s",
+        "Gap anterior": "—" if prev == 0 else f"+{prev:.3f}s",
+    })
+
+st.dataframe(pd.DataFrame(table_rows), use_container_width=True, hide_index=True)
+````
+
+## File: dashboard/pages/02_evolution.py
+````python
+"""Pagina de evolucion — bump chart y gap acumulado."""
+
+from __future__ import annotations
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+import pandas as pd
+import streamlit as st
+
+from dashboard.components import api_client as api
+from dashboard.components.charts import (
+    create_gap_evolution_chart,
+    create_position_evolution_chart,
+)
+
+st.set_page_config(page_title="Evolucion — Rally Analyzer", page_icon="📈", layout="wide")
+
+with st.sidebar:
+    st.markdown("## Rally Analyzer")
+    st.markdown("---")
+    st.page_link("app.py", label="Overview")
+    st.page_link("pages/01_stages.py", label="Etapas")
+    st.page_link("pages/02_evolution.py", label="Evolucion")
+    st.page_link("pages/03_compare.py", label="Comparativa")
+
+st.title("Evolucion del Rally")
+st.divider()
+
+evolution = api.get_evolution()
+if not evolution:
+    st.error("No se puede conectar con la API.")
+    st.stop()
+
+# Construir DataFrame plano
+rows = []
+for driver in evolution:
+    for pos in driver["positions"]:
+        rows.append({
+            "entry_id":    driver["entry_id"],
+            "driver_name": driver["driver_name"],
+            "driver_code": driver["driver_code"],
+            "manufacturer": driver["manufacturer"],
+            "stage_id":    pos["stage_id"],
+            "stage_code":  pos["stage_code"],
+            "position":    pos["position"],
+            "diff_first_s": pos.get("diff_first_s") or 0,
+        })
+
+df = pd.DataFrame(rows)
+
+if df.empty or df["stage_code"].str.strip().eq("").all():
+    st.warning("No hay datos de evolucion disponibles. Verifica que el pipeline se ejecuto correctamente.")
+    st.stop()
+
+# Filtro de pilotos
+all_drivers = sorted(df["driver_code"].unique())
+selected = st.multiselect("Filtrar pilotos (vacio = todos)", options=all_drivers, default=[])
+df_filtered = df[df["driver_code"].isin(selected)] if selected else df
+
+# Bump chart
+st.markdown("### Posicion a lo largo del rally")
+fig_bump = create_position_evolution_chart(df_filtered)
+st.plotly_chart(fig_bump, use_container_width=True)
+
+# Gap chart (excluir lider)
+st.markdown("### Gap acumulado respecto al lider")
+df_gap = df_filtered[df_filtered["diff_first_s"] > 0].copy()
+if df_gap.empty:
+    st.info("El lider no tiene gap. Selecciona otros pilotos para ver diferencias.")
+else:
+    fig_gap = create_gap_evolution_chart(df_gap)
+    st.plotly_chart(fig_gap, use_container_width=True)
+
+# Tabla pivot
+st.markdown("### Posiciones por etapa")
+try:
+    stage_order = df_filtered.drop_duplicates("stage_id").sort_values("stage_id")["stage_code"].tolist()
+    pivot = df_filtered.pivot_table(
+        index=["driver_code", "manufacturer"],
+        columns="stage_code",
+        values="position",
+        aggfunc="first",
+    ).reset_index()
+    pivot.columns.name = None
+    # Reordenar columnas por etapa
+    fixed_cols = ["driver_code", "manufacturer"]
+    stage_cols = [c for c in stage_order if c in pivot.columns]
+    pivot = pivot[fixed_cols + stage_cols]
+    st.dataframe(pivot, use_container_width=True, hide_index=True)
+except Exception:
+    pass
+````
+
+## File: dashboard/pages/03_compare.py
+````python
+"""Pagina de comparativa — dos pilotos cara a cara."""
+
+from __future__ import annotations
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+import pandas as pd
+import streamlit as st
+
+from dashboard.components import api_client as api
+from dashboard.components.charts import create_comparison_chart
+
+st.set_page_config(page_title="Comparativa — Rally Analyzer", page_icon="🔀", layout="wide")
+
+with st.sidebar:
+    st.markdown("## Rally Analyzer")
+    st.markdown("---")
+    st.page_link("app.py", label="Overview")
+    st.page_link("pages/01_stages.py", label="Etapas")
+    st.page_link("pages/02_evolution.py", label="Evolucion")
+    st.page_link("pages/03_compare.py", label="Comparativa")
+
+st.title("Comparativa entre Pilotos")
+st.divider()
+
+drivers = api.get_drivers()
+if not drivers:
+    st.error("No se puede conectar con la API.")
+    st.stop()
+
+driver_options = {
+    f"{d['driver_name']} ({d['manufacturer']}) #{d['car_number']}": d
+    for d in drivers
+}
+driver_names = list(driver_options.keys())
+
+col1, col2 = st.columns(2)
+with col1:
+    sel_a = st.selectbox("Piloto A", driver_names, index=0)
+with col2:
+    sel_b = st.selectbox("Piloto B", driver_names, index=1)
+
+driver_a = driver_options[sel_a]
+driver_b = driver_options[sel_b]
+
+if driver_a["entry_id"] == driver_b["entry_id"]:
+    st.warning("Selecciona dos pilotos diferentes.")
+    st.stop()
+
+result = api.compare_drivers(driver_a["entry_id"], driver_b["entry_id"])
+if not result:
+    st.error("No se pudo obtener la comparativa.")
+    st.stop()
+
+times_a = result.get("stage_times_a", [])
+times_b = result.get("stage_times_b", [])
+
+df_a = pd.DataFrame(times_a)
+df_b = pd.DataFrame(times_b)
+
+if df_a.empty or df_b.empty:
+    st.warning("No hay datos de tiempos disponibles.")
+    st.stop()
+
+# ── KPIs ──────────────────────────────────────────────────────────────────────
+st.markdown(f"### {driver_a['driver_name']} vs {driver_b['driver_name']}")
+
+# Calcular victorias por etapa correctamente (un registro por etapa)
+df_a_sorted = df_a.sort_values("stage_code").reset_index(drop=True)
+df_b_sorted = df_b.sort_values("stage_code").reset_index(drop=True)
+
+wins_a = 0
+wins_b = 0
+for _, ra in df_a_sorted.iterrows():
+    match = df_b_sorted[df_b_sorted["stage_code"] == ra["stage_code"]]
+    if not match.empty:
+        ta = ra.get("time_s") or 9999
+        tb = match.iloc[0].get("time_s") or 9999
+        if ta < tb:
+            wins_a += 1
+        else:
+            wins_b += 1
+
+c1, c2, c3 = st.columns(3)
+with c1:
+    st.metric(f"Etapas ganadas — {driver_a['driver_code']}", wins_a)
+with c2:
+    st.metric(f"Etapas ganadas — {driver_b['driver_code']}", wins_b)
+with c3:
+    st.metric("Total etapas", len(df_a_sorted))
+
+st.divider()
+
+# ── Grafico ───────────────────────────────────────────────────────────────────
+fig = create_comparison_chart(
+    df_a_sorted, df_b_sorted,
+    driver_a["driver_name"], driver_b["driver_name"],
+    driver_a.get("manufacturer", ""), driver_b.get("manufacturer", ""),
+)
+st.plotly_chart(fig, use_container_width=True)
+
+# ── Tabla detallada (sin duplicados) ──────────────────────────────────────────
+st.markdown("### Detalle por etapa")
+
+rows = []
+for _, ra in df_a_sorted.iterrows():
+    stage = ra["stage_code"]
+    match = df_b_sorted[df_b_sorted["stage_code"] == stage]
+    if match.empty:
+        continue
+    rb = match.iloc[0]
+    ta = ra.get("time_s") or 0
+    tb = rb.get("time_s") or 0
+    diff = round(ta - tb, 3)
+    winner = driver_a["driver_code"] if ta < tb else driver_b["driver_code"]
+    rows.append({
+        "Etapa": stage,
+        f"Tiempo {driver_a['driver_code']} (s)": ta,
+        f"Tiempo {driver_b['driver_code']} (s)": tb,
+        "Diferencia (s)": diff,
+        "Ganador": winner,
+    })
+
+df_table = pd.DataFrame(rows)
+st.dataframe(df_table, use_container_width=True, hide_index=True)
+````
+
+## File: docs/bloque-03-dashboard.md
+````markdown
+# Bloque 3 — Dashboard Streamlit
+
+## Lecciones del Bloque 2
+
+| Problema | Causa | Solución |
+|---|---|---|
+| `pydantic-settings` no estaba en `requirements.txt` | Se usaba en `config.py` pero faltaba la dependencia | Añadido `pydantic-settings==2.3.0` al `requirements.txt` |
+| Archivos del zip no reemplazan los existentes | Windows no sobreescribe sin confirmación | Copiar archivos manualmente en VSCode |
+
+---
+
+## Objetivo
+
+Construir el dashboard interactivo con Streamlit y Plotly que consume el backend
+del Bloque 2 y presenta los datos con gráficos interactivos y filtros dinámicos.
+
+---
+
+## Archivos creados / modificados
+
+```
+dashboard/
+├── app.py                          ← modificado: página overview completa
+├── components/
+│   ├── api_client.py               ← nuevo: cliente HTTP al backend
+│   └── charts.py                  ← nuevo: gráficos Plotly reutilizables
+└── pages/
+    ├── 01_stages.py               ← nuevo: página de etapas
+    ├── 02_evolution.py            ← nuevo: página de evolución
+    └── 03_compare.py              ← nuevo: página de comparativa
+
+ingestion/pipeline.py              ← modificado: encoding="utf-8-sig"
+backend/app/services/data_loader.py ← modificado: encoding="utf-8-sig"
+docs/
+└── bloque-03-dashboard.md         ← este archivo
+```
+
+---
+
+## Arquitectura del dashboard
+
+```
+FastAPI (localhost:8000)
+        │  HTTP/JSON
+        ▼
+api_client.py       → encapsula todas las llamadas al backend
+        │  dicts/listas Python
+        ▼
+pages/*.py          → lógica de UI y transformación a DataFrames
+        │  DataFrames Pandas
+        ▼
+charts.py           → funciones Plotly → figuras
+        │  go.Figure
+        ▼
+st.plotly_chart()   → renderizado en el navegador
+```
+
+---
+
+## Páginas del dashboard
+
+### Overview (`app.py`)
+- KPIs: nombre del rally, país, nº etapas, nº pilotos
+- Tabla de clasificación general final con gaps
+- Resumen por fabricante
+- Podio (Top 3)
+
+### Etapas (`pages/01_stages.py`)
+- Selector dinámico de etapa (código + nombre + distancia)
+- KPIs de la etapa: código, distancia, superficie
+- Bar chart horizontal con tiempos, coloreado por fabricante
+- Gap vs líder anotado en cada barra
+- Tabla detallada con gap vs líder y gap vs anterior
+
+### Evolución (`pages/02_evolution.py`)
+- Multiselect de pilotos (filtro dinámico)
+- Bump chart: posición de cada piloto etapa a etapa (eje Y invertido)
+- Gap chart: gap acumulado respecto al líder
+- Tabla pivot de posiciones por etapa
+
+### Comparativa (`pages/03_compare.py`)
+- Dos selectores de piloto
+- KPIs: etapas ganadas por cada piloto
+- Grouped bar chart con tiempos por etapa de ambos pilotos
+- Tabla detallada con diferencia por etapa y ganador
+
+---
+
+## Componentes reutilizables
+
+### `charts.py`
+
+| Función | Gráfico | Descripción |
+|---|---|---|
+| `create_stage_times_chart()` | Bar horizontal | Tiempos de etapa con gap anotado |
+| `create_gap_evolution_chart()` | Line chart | Gap acumulado respecto al líder |
+| `create_position_evolution_chart()` | Bump chart | Posición etapa a etapa |
+| `create_comparison_chart()` | Grouped bar | Tiempos de dos pilotos |
+
+### `api_client.py`
+Encapsula todas las llamadas HTTP al backend. Si la API no está disponible,
+devuelve listas/dicts vacíos en lugar de lanzar excepciones.
+
+---
+
+## Lecciones del Bloque 3
+
+| Problema | Causa | Solución |
+|---|---|---|
+| `utf-8 codec can't decode byte 0xa1` en dashboard | Windows guardó los CSVs/archivos con encoding cp1252 en lugar de UTF-8 | Usar `encoding="utf-8-sig"` tanto al guardar CSVs (`pipeline.py`) como al leerlos (`data_loader.py`) |
+| El fix `encoding="latin-1"` no funcionó | El error seguía diciendo `utf-8 codec` porque Python seguía usando UTF-8 en otro lugar | La solución correcta es `utf-8-sig` en ambos lados (escritura y lectura) |
+| `dashboard/app.py` se corrompió al copiarlo del zip | Windows guardó el archivo con cp1252, corrompiendo emojis y caracteres especiales (`é`, `ó`, `ñ`, `─`) | Reescribir el archivo limpio desde terminal con `python -c "open(..., encoding='utf-8')"` o usar VSCode → Save with Encoding → UTF-8 |
+| `ModuleNotFoundError: No module named 'dashboard'` | Streamlit ejecuta `app.py` desde dentro de `dashboard/`, por lo que el módulo raíz no está en el path | Añadir al inicio de `app.py`: `sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))` |
+| `lru_cache` parecía cachear el error de encoding | Al reiniciar Streamlit sin reiniciar la API, la caché del data_loader podía tener estado inconsistente | Reiniciar siempre **ambos** procesos (API + Streamlit) después de cambios en `data_loader.py` |
+
+### Nota sobre encoding en Windows
+Windows usa por defecto `cp1252` (Windows-1252) para archivos de texto. Python en Windows también usa este encoding por defecto al abrir archivos sin especificarlo. El BOM de `utf-8-sig` le indica a Windows que el archivo es UTF-8, evitando el problema. **Regla:** siempre especificar `encoding="utf-8-sig"` al leer/escribir CSVs con caracteres especiales en proyectos Python en Windows.
+
+---
+
+## Issues visuales detectados (a corregir en Bloque 4)
+
+| Issue | Descripción |
+|---|---|
+| Bump chart comprimido | Todos los datos aparecen en una sola columna, el eje X no muestra las etapas |
+| Gap chart sin labels | El eje X e Y no muestran valores legibles |
+| Bar chart sin nombres | El eje Y del bar chart de etapas no muestra los nombres de los pilotos |
+| Comparativa tabla duplicada | El merge de la tabla de comparativa produce filas duplicadas |
+| Colores muy llamativos | Rojo/azul intensos no encajan con estética profesional de portfolio |
+
+---
+
+## Validaciones completadas
+
+```
+V1 — Dashboard arranca sin errores    ✅
+V2 — Overview con clasificación       ✅
+V3 — Pagina Etapas con chart          ✅
+V4 — Pagina Evolucion                 ✅
+V5 — Pagina Comparativa               ✅
+GitHub repo creado y subido           ✅
+README actualizado                    ✅
+```
+
+---
+
+*Siguiente: Bloque 4 — Graficos avanzados y pulido visual.*
+````
+
+## File: ingestion/pipeline.py
+````python
+"""
+Pipeline de ingesta de datos WRC.
+
+Uso:
+    python -m ingestion.pipeline                  # descarga temporada activa
+    python -m ingestion.pipeline --event-id 123   # descarga un evento concreto
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import logging
+import sys
+from pathlib import Path
+
+import pandas as pd
+
+from ingestion import wrc_client as client
+from ingestion import transformers as tr
+
+# ── Logging ───────────────────────────────────────────────────────────────────
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s — %(message)s",
+    datefmt="%H:%M:%S",
+)
+logger = logging.getLogger("ingestion.pipeline")
+
+# ── Paths ─────────────────────────────────────────────────────────────────────
+_PROJECT_ROOT = Path(__file__).resolve().parents[1]
+RAW_DIR = _PROJECT_ROOT / "data" / "raw"
+PROCESSED_DIR = _PROJECT_ROOT / "data" / "processed"
+
+
+def _save_json(data: object, path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    logger.info("JSON guardado → %s", path.name)
+
+
+def _save_csv(df: pd.DataFrame, path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    df.to_csv(path, index=False, encoding="utf-8")
+    logger.info("CSV guardado → %s (%d filas)", path.name, len(df))
+
+
+# ── Pasos del pipeline ────────────────────────────────────────────────────────
+
+def step_season() -> list[dict]:
+    """Paso 1: descarga y guarda los eventos de la temporada activa."""
+    logger.info("── Paso 1: temporada activa ──")
+    events = client.get_active_season()
+    _save_json(events, RAW_DIR / "season_events.json")
+    df = tr.transform_events(events)
+    _save_csv(df, PROCESSED_DIR / "events.csv")
+    return events
+
+
+def step_event(event_id: int, event_name: str) -> None:
+    """Paso 2: descarga y procesa un evento completo."""
+    logger.info("── Paso 2: evento %d (%s) ──", event_id, event_name)
+    safe_name = event_name.lower().replace(" ", "_")[:30]
+
+    # — Itinerario + etapas —
+    logger.info("  Descargando itinerario...")
+    itinerary = client.get_itinerary(event_id)
+    _save_json(itinerary, RAW_DIR / f"{safe_name}_itinerary.json")
+    stages_df = tr.transform_stages(itinerary)
+    _save_csv(stages_df, PROCESSED_DIR / f"{safe_name}_stages.csv")
+
+    if stages_df.empty:
+        logger.warning("  No se encontraron etapas para este evento.")
+        return
+
+    # — Entradas (pilotos) —
+    logger.info("  Descargando pilotos...")
+    try:
+        entries = client.get_entries(event_id)
+        _save_json(entries, RAW_DIR / f"{safe_name}_entries.json")
+        entries_df = tr.transform_entries(entries)
+        _save_csv(entries_df, PROCESSED_DIR / f"{safe_name}_entries.csv")
+    except Exception as e:
+        logger.warning("  No se pudieron descargar pilotos: %s", e)
+        entries_df = pd.DataFrame()
+
+    # — Tiempos de cada etapa —
+    all_stage_times: list[pd.DataFrame] = []
+    all_overall: list[pd.DataFrame] = []
+
+    stage_ids = stages_df["stage_id"].tolist()
+    logger.info("  Descargando tiempos de %d etapas...", len(stage_ids))
+
+    for stage_id in stage_ids:
+        stage_code = stages_df.loc[
+            stages_df["stage_id"] == stage_id, "stage_code"
+        ].values[0]
+        logger.info("    Etapa %s (id=%d)...", stage_code, stage_id)
+
+        try:
+            raw_times = client.get_stage_times(event_id, stage_id)
+            if raw_times:
+                df_times = tr.transform_stage_times(raw_times, stage_id, event_id)
+                df_times["stage_code"] = stage_code
+                all_stage_times.append(df_times)
+        except Exception as e:
+            logger.warning("    stage_times %d fallido: %s", stage_id, e)
+
+        try:
+            raw_overall = client.get_overall_results(event_id, stage_id)
+            if raw_overall:
+                df_overall = tr.transform_overall_results(raw_overall, stage_id, event_id)
+                df_overall["stage_code"] = stage_code
+                all_overall.append(df_overall)
+        except Exception as e:
+            logger.warning("    overall %d fallido: %s", stage_id, e)
+
+    # — Guardar consolidados —
+    if all_stage_times:
+        stage_times_df = pd.concat(all_stage_times, ignore_index=True)
+        _save_csv(stage_times_df, PROCESSED_DIR / f"{safe_name}_stage_times.csv")
+
+    if all_overall:
+        overall_df = pd.concat(all_overall, ignore_index=True)
+        _save_csv(overall_df, PROCESSED_DIR / f"{safe_name}_overall.csv")
+
+    logger.info("  Evento %s completado.", event_name)
+
+
+def run(event_id: int | None = None) -> None:
+    """Punto de entrada principal del pipeline."""
+    logger.info("═══ Rally Performance Analyzer — Pipeline de ingesta ═══")
+
+    events = step_season()
+
+    if not events:
+        logger.error("No se encontraron eventos en la temporada activa.")
+        sys.exit(1)
+
+    # Si se especifica un evento concreto, solo descargamos ese
+    if event_id is not None:
+        match = [e for e in events if e.get("id") == event_id]
+        if not match:
+            logger.error("Evento %d no encontrado en la temporada activa.", event_id)
+            sys.exit(1)
+        targets = match
+    else:
+        # Por defecto: solo el primer evento completado (status=Completed)
+        completed = [e for e in events if e.get("status") == "Completed"]
+        targets = completed[:1] if completed else events[:1]
+
+    for event in targets:
+        eid = event.get("id")
+        ename = event.get("name", f"event_{eid}")
+        step_event(eid, ename)
+
+    logger.info("═══ Pipeline finalizado ═══")
+
+
+# ── CLI ───────────────────────────────────────────────────────────────────────
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="WRC data ingestion pipeline")
+    parser.add_argument(
+        "--event-id",
+        type=int,
+        default=None,
+        help="ID del evento a descargar (por defecto: primer evento completado)",
+    )
+    args = parser.parse_args()
+    run(event_id=args.event_id)
+````
+
+## File: README.md
+````markdown
+# Rally Performance Analyzer
+
+Dashboard interactivo para analizar tiempos y rendimiento en el **World Rally Championship (WRC)**.
+
+> Proyecto de portfolio — Analisis de datos / Motorsport
+
+---
+
+## Stack tecnologico
+
+| Capa | Tecnologia |
+|---|---|
+| Backend | Python 3.11 · FastAPI · Uvicorn |
+| Dashboard | Streamlit |
+| Datos | Pandas · Numpy |
+| Visualizacion | Plotly |
+| Ingesta | httpx + mock data (estructura WRC oficial) |
+| Validacion | Pydantic v2 · pydantic-settings |
+| Tests | Pytest (51 tests) |
+| Deploy | Streamlit Cloud + Render |
+
+---
+
+## Funcionalidades
+
+- Clasificacion general del rally con tiempos y gaps
+- Tiempos por etapa con gap vs lider (bar chart interactivo)
+- Evolucion de posiciones a lo largo del rally (bump chart)
+- Gap acumulado respecto al lider
+- Comparativa entre dos pilotos por etapa
+- Filtros dinamicos de pilotos
+- API REST documentada con Swagger
+
+---
+
+## Arquitectura
+
+```
+mock_data / WRC API
+      |
+      v
+ingestion/pipeline.py   (httpx + Pandas)
+      |
+      v
+data/processed/*.csv
+      |
+      v
+backend/ FastAPI        (endpoints REST)
+      |
+      v
+dashboard/ Streamlit    (Plotly charts)
+```
+
+---
+
+## Como ejecutar
+
+```bash
+# 1. Crear entorno virtual con Python 3.11 (obligatorio)
+py -3.11 -m venv venv
+source venv/Scripts/activate   # Windows Git Bash
+# o: venv\Scripts\activate     # Windows CMD
+
+# 2. Instalar dependencias
+pip install -r requirements.txt
+
+# 3. Configurar entorno
+cp .env.example .env
+
+# 4. Generar datos
+WRC_USE_MOCK=true python -m ingestion.pipeline
+
+# 5. Terminal 1 - API
+uvicorn backend.app.main:app --reload
+
+# 6. Terminal 2 - Dashboard
+streamlit run dashboard/app.py
+```
+
+- API Swagger: http://localhost:8000/docs
+- Dashboard: http://localhost:8501
+
+---
+
+## Tests
+
+```bash
+pytest backend/tests/ -v
+# 51 passed
+```
+
+---
+
+## Deploy
+
+### Streamlit Cloud (dashboard)
+1. Fork o conecta el repo en https://share.streamlit.io
+2. Main file: `dashboard/app.py`
+3. En Secrets añade: `DASHBOARD_API_URL = "https://tu-api.onrender.com"`
+
+### Render (API)
+1. New Web Service desde el repo
+2. Build command: `pip install -r requirements.txt && WRC_USE_MOCK=true python -m ingestion.pipeline`
+3. Start command: `uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT`
+
+---
+
+## Nota sobre los datos
+
+La API oficial `api.wrc.com` fue dada de baja por WRC durante el desarrollo.
+Los datos mock siguen la estructura exacta de la API original e incluyen el
+Rally Monte Carlo 2024 con 6 pilotos reales, 5 etapas y tiempos basados en
+ritmos reales del WRC.
+
+```bash
+# Cuando la API real este disponible:
+WRC_USE_MOCK=false python -m ingestion.pipeline
+```
+
+---
+
+## Problemas conocidos y soluciones
+
+| Problema | Causa | Solucion |
+|---|---|---|
+| `pydantic-core` falla | Python 3.14 sin wheels | Usar Python 3.11 |
+| `SSLError` en pip | Red corporativa | `--trusted-host pypi.org --trusted-host files.pythonhosted.org` |
+| `ModuleNotFoundError: backend` | pytest sin root | `conftest.py` vacio en raiz |
+| `api.wrc.com` no resuelve | Dominio dado de baja | Mock data incluido en el repo |
+| `utf-8 codec can't decode` | Windows encoding | `encoding="utf-8-sig"` en CSVs |
+
+---
+
+## Estado del proyecto
+
+| Bloque | Descripcion | Estado |
+|---|---|---|
+| 0 | Setup del proyecto | Completado |
+| 1 | Ingesta de datos WRC | Completado |
+| 2 | Backend FastAPI | Completado |
+| 3 | Dashboard base | Completado |
+| 4 | Graficos avanzados | Completado |
+| 5 | Pulido y deploy | Completado |
+
+---
+
+## Documentacion
+
+Ver `docs/` para la documentacion detallada de cada bloque, lecciones aprendidas
+y guia de comandos rapidos.
 ````

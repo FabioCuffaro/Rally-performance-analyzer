@@ -1,0 +1,4 @@
+﻿event_id,name,status,country,country_iso,date_start,date_finish
+1,Rallye Automobile Monte Carlo,Completed,France,FR,2024-01-25T00:00:00,2024-01-28T00:00:00
+2,Rally Sweden,Completed,Sweden,SE,2024-02-15T00:00:00,2024-02-18T00:00:00
+3,Safari Rally Kenya,Completed,Kenya,KE,2024-03-28T00:00:00,2024-03-31T00:00:00

@@ -18,11 +18,14 @@ env/
 .env
 .env.local
 
-# Data (raw and processed data not committed — too large / regenerable)
+# Data raw (JSON originales — regenerables, no subir)
 data/raw/*.json
 data/raw/*.csv
-data/processed/*.csv
-data/processed/*.parquet
+
+# Data processed — los CSVs de mock SI se suben al repo para el deploy
+# Si quieres excluirlos, descomenta las siguientes lineas:
+# data/processed/*.csv
+# data/processed/*.parquet
 
 # Keep the .gitkeep placeholders
 !data/raw/.gitkeep
@@ -38,10 +41,17 @@ data/processed/*.parquet
 .DS_Store
 Thumbs.db
 
+# Repomix output (herramienta de analisis de codigo, no subir al repo)
+repomix-output.md
+repomix-output*.md
+
+# Contexto interno del proyecto (uso personal, no subir al repo)
+docs/contexto-proyecto.md
+
 # Pytest
 .pytest_cache/
 .coverage
 htmlcov/
 
-# Streamlit
+# Streamlit secrets (contienen URLs y credenciales de produccion)
 .streamlit/secrets.toml

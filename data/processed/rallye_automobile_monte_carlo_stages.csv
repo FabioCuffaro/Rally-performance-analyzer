@@ -1,0 +1,6 @@
+﻿stage_id,stage_code,name,distance_km,surface,leg_name,status
+101,SS1,Col de Turini,18.55,Tarmac,Leg 1,Completed
+102,SS2,La Cabanette - Col de Braus,12.3,Tarmac,Leg 1,Completed
+103,SS3,Lucéram - Lantosque,22.1,Tarmac,Leg 2,Completed
+104,SS4,Saint-Léger - Escragnolles,15.8,Tarmac,Leg 2,Completed
+105,SS5,Col de Turini (Power Stage),18.55,Tarmac,Leg 3,Completed

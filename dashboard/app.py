@@ -1,6 +1,6 @@
 from __future__ import annotations
 import sys, os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import pandas as pd
 import streamlit as st
 from dashboard.components import api_client as api
@@ -27,7 +27,8 @@ stages = api.get_stages()
 drivers = api.get_drivers()
 
 if not rallies or not classification:
-    st.error("No se puede conectar con la API. Arranca FastAPI primero: uvicorn backend.app.main:app --reload")
+    st.error("No se puede conectar con la API. Arranca FastAPI primero.")
+    st.code("uvicorn backend.app.main:app --reload")
     st.stop()
 
 rally = rallies[0]

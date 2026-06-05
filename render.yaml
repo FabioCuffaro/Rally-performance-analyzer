@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: rally-performance-analyzer-api
+    runtime: python
+    buildCommand: pip install -r requirements.txt && WRC_USE_MOCK=true python -m ingestion.pipeline
+    startCommand: uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: WRC_USE_MOCK
+        value: true
+      - key: PYTHON_VERSION
+        value: 3.11.9
