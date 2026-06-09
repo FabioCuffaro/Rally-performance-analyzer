@@ -1,7 +1,6 @@
 """
-Modelos Pydantic — esquemas de validación y serialización de la API.
-
-Cada schema representa la estructura de datos que devuelven los endpoints.
+Modelos Pydantic — esquemas de validacion y serializacion de la API.
+V2: añadidos schemas para pace, surface stats, consistency, stage wins, momentum.
 """
 
 from __future__ import annotations
@@ -12,7 +11,6 @@ from pydantic import BaseModel, Field
 # ── Eventos ───────────────────────────────────────────────────────────────────
 
 class EventSummary(BaseModel):
-    """Resumen de un evento/rally."""
     event_id: int
     name: str
     status: str
@@ -25,7 +23,6 @@ class EventSummary(BaseModel):
 # ── Etapas ────────────────────────────────────────────────────────────────────
 
 class Stage(BaseModel):
-    """Información de una etapa."""
     stage_id: int
     stage_code: str
     name: str
@@ -38,7 +35,6 @@ class Stage(BaseModel):
 # ── Pilotos ───────────────────────────────────────────────────────────────────
 
 class Driver(BaseModel):
-    """Información de un piloto inscrito."""
     entry_id: int
     driver_name: str
     driver_code: str
@@ -52,7 +48,6 @@ class Driver(BaseModel):
 # ── Tiempos de etapa ──────────────────────────────────────────────────────────
 
 class StageTimeEntry(BaseModel):
-    """Tiempo de un piloto en una etapa concreta."""
     entry_id: int
     position: int
     time_s: float | None = None
@@ -60,7 +55,6 @@ class StageTimeEntry(BaseModel):
     diff_first_s: float | None = None
     diff_prev_s: float | None = None
     status: str
-    # Enriquecido con datos del piloto
     driver_name: str = ""
     driver_code: str = ""
     manufacturer: str = ""
@@ -68,23 +62,20 @@ class StageTimeEntry(BaseModel):
 
 
 class StageResult(BaseModel):
-    """Resultado completo de una etapa."""
     event_id: int
     stage_id: int
     stage_code: str
     entries: list[StageTimeEntry]
 
 
-# ── Clasificación general ─────────────────────────────────────────────────────
+# ── Clasificacion general ─────────────────────────────────────────────────────
 
 class OverallEntry(BaseModel):
-    """Posición de un piloto en la clasificación general."""
     entry_id: int
     position: int
     total_time_s: float | None = None
     total_time_str: str | None = None
     diff_first_s: float | None = None
-    # Enriquecido
     driver_name: str = ""
     driver_code: str = ""
     manufacturer: str = ""
@@ -92,7 +83,6 @@ class OverallEntry(BaseModel):
 
 
 class OverallClassification(BaseModel):
-    """Clasificación general tras una etapa."""
     event_id: int
     stage_id: int
     stage_code: str
@@ -102,7 +92,6 @@ class OverallClassification(BaseModel):
 # ── Comparativa entre pilotos ─────────────────────────────────────────────────
 
 class DriverStageTime(BaseModel):
-    """Tiempo de un piloto en una etapa para comparativa."""
     stage_code: str
     position: int
     time_s: float | None = None
@@ -110,7 +99,6 @@ class DriverStageTime(BaseModel):
 
 
 class DriverComparison(BaseModel):
-    """Comparativa de dos pilotos a lo largo del rally."""
     event_id: int
     driver_a: Driver
     driver_b: Driver
@@ -118,10 +106,9 @@ class DriverComparison(BaseModel):
     stage_times_b: list[DriverStageTime]
 
 
-# ── Evolución de posiciones ───────────────────────────────────────────────────
+# ── Evolucion de posiciones ───────────────────────────────────────────────────
 
 class PositionAtStage(BaseModel):
-    """Posición de un piloto tras cada etapa."""
     stage_code: str
     stage_id: int
     position: int
@@ -130,9 +117,86 @@ class PositionAtStage(BaseModel):
 
 
 class DriverEvolution(BaseModel):
-    """Evolución de posición de un piloto a lo largo del rally."""
     entry_id: int
     driver_name: str
     driver_code: str
     manufacturer: str
     positions: list[PositionAtStage]
+
+
+# ── V2: Pace ──────────────────────────────────────────────────────────────────
+
+class StagePace(BaseModel):
+    """Pace de un piloto en una etapa concreta."""
+    stage_code: str
+    distance_km: float
+    time_s: float
+    pace_s_per_km: float
+    surface: str
+
+
+class DriverPaceData(BaseModel):
+    """Pace de un piloto por etapa."""
+    entry_id: int
+    driver_name: str
+    manufacturer: str
+    stages: list[StagePace]
+    avg_pace: float
+
+
+# ── V2: Surface stats ─────────────────────────────────────────────────────────
+
+class SurfaceStatEntry(BaseModel):
+    """Stats de pace de un piloto en una superficie concreta."""
+    surface: str
+    avg_pace: float
+    stage_count: int
+
+
+class DriverSurfaceStats(BaseModel):
+    """Rendimiento de un piloto por superficie."""
+    entry_id: int
+    driver_name: str
+    manufacturer: str
+    stats: list[SurfaceStatEntry]
+
+
+# ── V2: Consistencia ──────────────────────────────────────────────────────────
+
+class ConsistencyIndex(BaseModel):
+    """Indice de consistencia de un piloto (std del pace)."""
+    entry_id: int
+    driver_name: str
+    manufacturer: str
+    pace_mean: float
+    pace_std: float
+    stage_count: int
+
+
+# ── V2: Stage wins ────────────────────────────────────────────────────────────
+
+class StageWinEntry(BaseModel):
+    """Etapas ganadas por un piloto en el rally."""
+    entry_id: int
+    driver_name: str
+    manufacturer: str
+    win_count: int
+    stage_codes: list[str]
+
+
+class RallyStageWins(BaseModel):
+    """Ganadores de etapa de un rally."""
+    event_id: int
+    wins: list[StageWinEntry]
+
+
+# ── V2: Momentum ─────────────────────────────────────────────────────────────
+
+class MomentumEntry(BaseModel):
+    """Momentum de un piloto: mejora o empeora en la segunda mitad."""
+    entry_id: int
+    driver_name: str
+    manufacturer: str
+    avg_pos_first_half: float | None = None
+    avg_pos_second_half: float | None = None
+    momentum: float  # positivo = mejora, negativo = empeora
