@@ -14,41 +14,42 @@ Dashboard interactivo para analizar tiempos y rendimiento en el **World Rally Ch
 | Dashboard | Streamlit |
 | Datos | Pandas · Numpy |
 | Visualizacion | Plotly |
-| Ingesta | httpx + mock data (estructura WRC oficial) |
+| Ingesta | httpx · BeautifulSoup · scraping eWRC + Wikipedia |
 | Validacion | Pydantic v2 · pydantic-settings |
-| Tests | Pytest (51 tests) |
+| Tests | Pytest (89 tests) |
 | Deploy | Streamlit Cloud + Render |
 
 ---
 
 ## Funcionalidades
 
-- Clasificacion general del rally con tiempos y gaps
+- Clasificacion general del rally con tiempos y gaps reales
 - Tiempos por etapa con gap vs lider (bar chart interactivo)
 - Evolucion de posiciones a lo largo del rally (bump chart)
 - Gap acumulado respecto al lider
 - Comparativa entre dos pilotos por etapa
 - Filtros dinamicos de pilotos
 - API REST documentada con Swagger
+- Datos reales WRC 2025 (Monte Carlo, Sweden)
 
 ---
 
 ## Arquitectura
 
 ```
-mock_data / WRC API
-      |
-      v
-ingestion/pipeline.py   (httpx + Pandas)
-      |
-      v
+eWRC-results.com + Wikipedia
+         |
+         v
+ingestion/ewrc_pipeline.py   (httpx + BeautifulSoup + Pandas)
+         |
+         v
 data/processed/*.csv
-      |
-      v
-backend/ FastAPI        (endpoints REST)
-      |
-      v
-dashboard/ Streamlit    (Plotly charts)
+         |
+         v
+backend/ FastAPI              (endpoints REST)
+         |
+         v
+dashboard/ Streamlit          (Plotly charts)
 ```
 
 ---
@@ -67,7 +68,11 @@ pip install -r requirements.txt
 # 3. Configurar entorno
 cp .env.example .env
 
-# 4. Generar datos
+# 4. Descargar datos reales WRC 2025
+python -m ingestion.ewrc_pipeline --event-id 89918 --slug rallye-automobile-monte-carlo-2025
+python -m ingestion.ewrc_pipeline --event-id 90090 --slug rally-sweden-2025
+
+# (Alternativa: datos mock incluidos en el repo)
 WRC_USE_MOCK=true python -m ingestion.pipeline
 
 # 5. Terminal 1 - API
@@ -86,7 +91,7 @@ streamlit run dashboard/app.py
 
 ```bash
 pytest backend/tests/ -v
-# 51 passed
+# 89 passed
 ```
 
 ---
@@ -105,17 +110,15 @@ pytest backend/tests/ -v
 
 ---
 
-## Nota sobre los datos
+## Datos
 
-La API oficial `api.wrc.com` fue dada de baja por WRC durante el desarrollo.
-Los datos mock siguen la estructura exacta de la API original e incluyen el
-Rally Monte Carlo 2024 con 6 pilotos reales, 5 etapas y tiempos basados en
-ritmos reales del WRC.
+Los datos provienen de dos fuentes:
 
-```bash
-# Cuando la API real este disponible:
-WRC_USE_MOCK=false python -m ingestion.pipeline
-```
+- **eWRC-results.com** — resultados finales y clasificaciones WRC 2025 via scraping
+- **Wikipedia REST API** — etapas, distancias y ganadores de etapa
+
+Los CSVs generados cubren Monte Carlo 2025 (62 pilotos) y Rally Sweden 2025 (57 pilotos, 18 etapas).
+Los datos mock del Rally Monte Carlo 2024 siguen incluidos como fallback.
 
 ---
 
@@ -128,6 +131,7 @@ WRC_USE_MOCK=false python -m ingestion.pipeline
 | `ModuleNotFoundError: backend` | pytest sin root | `conftest.py` vacio en raiz |
 | `api.wrc.com` no resuelve | Dominio dado de baja | Mock data incluido en el repo |
 | `utf-8 codec can't decode` | Windows encoding | `encoding="utf-8-sig"` en CSVs |
+| eWRC Next.js sin datos | Cloudflare Rocket Loader bloquea JS | Scraper hibrido: SSR /final-results + Wikipedia |
 
 ---
 
@@ -140,11 +144,9 @@ WRC_USE_MOCK=false python -m ingestion.pipeline
 | 2 | Backend FastAPI | Completado |
 | 3 | Dashboard base | Completado |
 | 4 | Graficos avanzados | Completado |
-| 5 | Pulido y deploy | Completado |
-
----
-
-## Documentacion
-
-Ver `docs/` para la documentacion detallada de cada bloque, lecciones aprendidas
-y guia de comandos rapidos.
+| 5 | Pulido y deploy V1 | Completado |
+| 6 | Scraper eWRC + datos reales | Completado |
+| 7 | Nuevos endpoints + metricas | Pendiente |
+| 8 | React: Setup + Layout | Pendiente |
+| 9 | React: Graficos + Paginas | Pendiente |
+| 10 | Pulido visual + deploy V2 | Pendiente |
