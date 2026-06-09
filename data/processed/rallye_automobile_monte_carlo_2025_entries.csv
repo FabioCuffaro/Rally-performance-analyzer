@@ -1,0 +1,63 @@
+﻿entry_id,driver_name,driver_code,driver_nationality,codriver_name,manufacturer,car_number,car_model,group
+8991801,Ogier Sébastien,OGI,,Landais Vincent,Toyota,17,Toyota GR Yaris Rally1,RC1
+8991802,Evans Elfyn,EVA,,Martin Scott,Toyota,33,Toyota GR Yaris Rally1,RC1
+8991803,Fourmaux Adrien,FOU,,Coria Alexandre,Hyundai,16,Hyundai i20 N Rally1,RC1
+8991804,Rovanperä Kalle,ROV,,Halttunen Jonne,Toyota,69,Toyota GR Yaris Rally1,RC1
+8991805,Tänak Ott,TÄN,,Järveoja Martin,Hyundai,8,Hyundai i20 N Rally1,RC1
+8991806,Neuville Thierry,NEU,,Wydaeghe Martijn,Hyundai,1,Hyundai i20 N Rally1,RC1
+8991807,McErlean Josh,MCE,,Treacy Eoin,Ford,55,Ford Puma Rally1,RC1
+8991808,Rossel Yohan,ROS,,Dunand Arnaud,Citroën,22,Citroën C3 Rally2,RC2
+8991809,Gryazin Nikolay,GRY,,Aleksandrov K.,Škoda,21,Škoda Fabia RS Rally2,RC2
+8991810,Camilli Eric,CAM,,de la Haye T.,Hyundai,31,Hyundai i20 N Rally2,RC2
+8991811,Rossel Léo,ROS,,Mercoiret G.,Citroën,34,Citroën C3 Rally2,RC2
+8991812,Greensmith Gus,GRE,,Andersson Jonas,Škoda,23,Škoda Fabia RS Rally2,RC2
+8991813,Černý Jan,ČER,,Krajča Ondřej,Citroën,37,Citroën C3 Rally2,RC2
+8991814,Daprà Roberto,DAP,,Guglielmetti Luca,Škoda,24,Škoda Fabia RS Rally2,RC2
+8991815,Solberg Oliver,SOL,,Edmondson Elliott,Toyota,20,Toyota GR Yaris Rally2,RC2
+8991816,Sarrazin Pablo,SAR,,Combe Geoffrey,Citroën,39,Citroën C3 Rally2,RC2
+8991817,Astier Raphaël,AST,,Giraudet Denis,Alpine,67,Alpine A110 Rally RGT,RGT
+8991818,Munster Charles,MUN,,Pascaud Loris,Hyundai,25,Hyundai i20 N Rally2,RC2
+8991819,Potty Maxime,POT,,Herman Renaud,Škoda,28,Škoda Fabia RS Rally2,RC2
+8991820,Rumeau Sarah,RUM,,Amblard Julie,Citroën,42,Citroën C3 Rally2,RC2
+8991821,Pelamourgues A.,PEL,,Pouget Bastien,Renault,56,Renault Clio Rally3,RC3
+8991822,Kogure Hikaru,KOG,,Luhtinen Topi,Toyota,26,Toyota GR Yaris Rally2,RC2
+8991823,Kohn Filip,KOH,,Whittock Ross,Škoda,38,Škoda Fabia RS Rally2,RC2
+8991824,Burri Olivier,BUR,,Levratti Anderson,Škoda,27,Škoda Fabia Rally2 evo,RC2
+8991825,Fontana Matteo,FON,,Arnaboldi A.,Ford,54,Ford Fiesta Rally3,RC3
+8991826,Rossi Ghjuvanni,ROS,,Sarmezan Kylian,Ford,52,Ford Fiesta Rally3,RC3
+8991827,Michellod Jonathan,MIC,,Fellay Stéphane,Škoda,43,Škoda Fabia R5,RC2
+8991828,Barneaud C.,BAR,,Barneaud Marc,Škoda,62,Škoda Fabia Rally2 evo,RC2
+8991829,Poizot Thibaut,POI,,Grand Marion,Škoda,59,Škoda Fabia R5,RC2
+8991830,Domínguez D. (H),DOM,,Peñate Rogelio,Ford,50,Ford Fiesta Rally3,RC3
+8991831,Dolce Renaud,DOL,,Giroud Quentin,Volkswagen,60,Volkswagen Polo GTI R5,RC2
+8991832,Delecour Eliott,DEL,,Roche Romain,Opel,40,Opel Corsa Rally4,RC4
+8991833,Saunier Julien,SAU,,Vauclare Frédéric,Renault,77,Renault Clio Rally5,RC5
+8991834,Daune J.,DAU,,Gaillot Morgan,Renault,65,Renault Clio Rally3,RC3
+8991835,Chiarani Maurizio,CHI,,Zanella Flavio,Škoda,47,Škoda Fabia RS Rally2,RC2
+8991836,Charnay Julien,CHA,,Gomez Maxime,Renault,78,Renault Clio Rally5,RC5
+8991837,Oldani Marco,OLD,,D'Agostino Pietro,Peugeot,71,Peugeot 208 Rally4,RC4
+8991838,Brega Flavio,BRE,,Zegna Marco,Škoda,36,Škoda Fabia RS Rally2,RC2
+8991839,Brazzoli Enrico,BRA,,Musiari Martina,Škoda,46,Škoda Fabia RS Rally2,RC2
+8991840,Ganguet Christophe,GAN,,Frison Emmanuel,Škoda,61,Škoda Fabia R5,RC2
+8991841,Bréchet Julien,BRÉ,,Escartefigue T.,Renault,64,Renault Clio Rally3,RC3
+8991842,Fumal Armand,FUM,,Escartefigue Jules,Alpine,68,Alpine A110 Rally RGT,RGT
+8991843,Boland Eamonn,BOL,,"""MJ""",Ford,29,Ford Fiesta Rally2,RC2
+8991844,Cols Lény,COL,,Lopes Pascal,Renault,63,Renault Clio Rally3,RC3
+8991845,Desangles Yanis,DES,,Théron Nicolas,Renault,57,Renault Clio Rally3,RC3
+8991846,Royère Eric,ROY,,Grenier Alexis,Renault,58,Renault Clio Rally3,RC3
+8991847,Fiore Emanuele,FIO,,Casalini Andrea,Peugeot,76,Peugeot 208 Rally4,RC4
+8991848,Yamamoto Yuki,YAM,,Fulton James,Toyota,30,Toyota GR Yaris Rally2,RC2
+8991849,Mattei Sébastien,MAT,,Biagetti Loan,Renault,82,Renault Clio Rally5,RC5
+8991850,Truchet Christophe,TRU,,Truchet Barbara,Renault,81,Renault Clio Rally5,RC5
+8991851,Lecki Laurent,LEC,,d'Ozenay Hugues,Peugeot,73,Peugeot 208 Rally4,RC4
+8991852,Aymard Jérôme,AYM,,Aymard Sandrine,Renault,72,Renault Clio RS R3T,RC4
+8991853,Guex Daniel,GUE,,Guieu Christopher,Hyundai,45,Hyundai i20 N Rally2,RC2
+8991854,Vialle Lilian,VIA,,Ghirardello Manuel,Renault,80,Renault Clio Rally5,RC5
+8991855,Auvert Romain,AUV,,Hareau Thomas,Renault,79,Renault Clio Rally5,RC5
+8991856,Berard Christophe,BER,,Bernabo Christophe,Alpine,70,Alpine A110 Rally RGT,RGT
+8991857,Somaschini Rachele,SOM,,Arena Nicola,Citroën,44,Citroën C3 Rally2,RC2
+8991858,Palmero Jean-Paul,PAL,,Pastorino Mattia,Peugeot,75,Peugeot 208 Rally4,RC4
+8991859,Marchino Filippo,MAR,,Ometto Pietro Elia,Škoda,48,Škoda Fabia Rally2 evo,RC2
+8991860,Šekuljica Slaven,ŠEK,,Petrović Damir,Ford,53,Ford Fiesta Rally3,RC3
+8991861,Dessi Marc,DES,,Giuliano Serena,Peugeot,74,Peugeot 208 Rally4,RC4
+8991862,Vossen Henk,VOS,,Vissenberg Willem,Hyundai,49,Hyundai i20 N Rally2,RC2

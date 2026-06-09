@@ -1,0 +1,16 @@
+﻿stage_id,stage_code,name,distance_km,surface,leg_name,status
+89918001,SS1,Special Stage 1,0.0,Tarmac,Leg 1,Completed
+89918002,SS2,Special Stage 2,0.0,Tarmac,Leg 1,Completed
+89918003,SS3,Special Stage 3,0.0,Tarmac,Leg 1,Completed
+89918004,SS4,Special Stage 4,0.0,Tarmac,Leg 1,Completed
+89918005,SS5,Special Stage 5,0.0,Tarmac,Leg 2,Completed
+89918006,SS6,Special Stage 6,0.0,Tarmac,Leg 2,Completed
+89918007,SS7,Special Stage 7,0.0,Tarmac,Leg 2,Completed
+89918008,SS8,Special Stage 8,0.0,Tarmac,Leg 2,Completed
+89918009,SS9,Special Stage 9,0.0,Tarmac,Leg 3,Completed
+89918010,SS10,Special Stage 10,0.0,Tarmac,Leg 3,Completed
+89918011,SS11,Special Stage 11,0.0,Tarmac,Leg 3,Completed
+89918012,SS12,Special Stage 12,0.0,Tarmac,Leg 3,Completed
+89918013,SS13,Special Stage 13,0.0,Tarmac,Leg 4,Completed
+89918014,SS14,Special Stage 14,0.0,Tarmac,Leg 4,Completed
+89918015,SS15,Special Stage 15,0.0,Tarmac,Leg 4,Completed

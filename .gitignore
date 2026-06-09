@@ -18,11 +18,14 @@ env/
 .env
 .env.local
 
-# Data raw (JSON originales — regenerables, no subir)
+# Data raw (JSON originales -- regenerables, no subir)
 data/raw/*.json
 data/raw/*.csv
 
-# Data processed — los CSVs de mock SI se suben al repo para el deploy
+# eWRC cache (HTML cacheado localmente, no subir al repo)
+data/raw/ewrc/
+
+# Data processed -- los CSVs de mock SI se suben al repo para el deploy
 # Si quieres excluirlos, descomenta las siguientes lineas:
 # data/processed/*.csv
 # data/processed/*.parquet
@@ -45,8 +48,9 @@ Thumbs.db
 repomix-output.md
 repomix-output*.md
 
-# Contexto interno del proyecto (uso personal, no subir al repo)
-docs/contexto-proyecto.md
+# Documentacion interna del proyecto (uso personal, no subir al repo)
+# El README.md es el unico documento publico
+docs/
 
 # Pytest
 .pytest_cache/

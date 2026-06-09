@@ -1,0 +1,19 @@
+﻿stage_id,stage_code,name,distance_km,surface,leg_name,status
+90090001,SS1,Umeå Sprint 1,5.16,Gravel,Leg 1,Completed
+90090002,SS2,Bygdsiljum 1,28.27,Gravel,Leg 2,Completed
+90090003,SS3,Andersvattnet 1,20.51,Gravel,Leg 2,Completed
+90090004,SS4,Bäck 1,10.8,Gravel,Leg 2,Completed
+90090005,SS5,Bygdsiljum 2,28.27,Gravel,Leg 2,Completed
+90090006,SS6,Andersvattnet 2,20.51,Gravel,Leg 2,Completed
+90090007,SS7,Bäck 2,10.8,Gravel,Leg 2,Completed
+90090008,SS8,Umeå Sprint 2,5.16,Gravel,Leg 2,Completed
+90090009,SS9,Vännäs 1,15.65,Gravel,Leg 3,Completed
+90090010,SS10,Sarsjöliden 1,14.23,Gravel,Leg 3,Completed
+90090011,SS11,Kolksele 1,16.06,Gravel,Leg 3,Completed
+90090012,SS12,Vännäs 2,15.65,Gravel,Leg 3,Completed
+90090013,SS13,Sarsjöliden 2,14.23,Gravel,Leg 3,Completed
+90090014,SS14,Kolksele 2,16.06,Gravel,Leg 3,Completed
+90090015,SS15,Umeå Sprint 3,5.16,Gravel,Leg 3,Completed
+90090016,SS16,Västervik 1,29.35,Gravel,Leg 4,Completed
+90090017,SS17,Västervik 2,29.35,Gravel,Leg 4,Completed
+90090018,SS18,Umeå,8.62,Gravel,Leg 4,Completed
