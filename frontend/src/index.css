@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    background-color: #09090b;
+    color: #fafafa;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #18181b;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #3f3f46;
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #52525b;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-rally-red hover:bg-red-600 text-white font-medium px-4 py-2 rounded-lg transition-colors;
+  }
+
+  .card {
+    @apply bg-surface-card border border-surface-border rounded-xl p-4;
+  }
+
+  .badge-pos-1 {
+    @apply bg-rally-gold text-black font-bold;
+  }
+  .badge-pos-2 {
+    @apply bg-rally-silver text-black font-bold;
+  }
+  .badge-pos-3 {
+    @apply bg-rally-bronze text-white font-bold;
+  }
+  .badge-pos-n {
+    @apply bg-surface-hover text-zinc-300 font-medium;
+  }
+}

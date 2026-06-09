@@ -1,19 +1,24 @@
 """Router de etapas — endpoints de etapas y tiempos."""
 
 from __future__ import annotations
+import math
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 
 from backend.app.models.schemas import Stage, StageResult, StageTimeEntry
 from backend.app.services import analytics, data_loader as loader
 
 router = APIRouter(prefix="/stages", tags=["Stages"])
 
+_DEFAULT = loader.DEFAULT_EVENT_ID
+
 
 @router.get("/", response_model=list[Stage])
-def list_stages() -> list[Stage]:
+def list_stages(
+    event_id: int = Query(_DEFAULT, description="ID del evento"),
+) -> list[Stage]:
     """Devuelve todas las etapas del rally."""
-    df = loader.get_stages()
+    df = loader.get_stages(event_id)
     if df.empty:
         return []
     return [
@@ -31,15 +36,22 @@ def list_stages() -> list[Stage]:
 
 
 @router.get("/{stage_id}/times", response_model=StageResult)
-def get_stage_times(stage_id: int) -> StageResult:
+def get_stage_times(
+    stage_id: int,
+    event_id: int = Query(_DEFAULT, description="ID del evento"),
+) -> StageResult:
     """Devuelve los tiempos de todos los pilotos en una etapa concreta."""
-    stages_df = loader.get_stages()
+    stages_df = loader.get_stages(event_id)
+
+    if stages_df.empty or "stage_id" not in stages_df.columns:
+        raise HTTPException(status_code=404, detail=f"Etapa {stage_id} no encontrada")
+
     stage_row = stages_df[stages_df["stage_id"] == stage_id]
     if stage_row.empty:
         raise HTTPException(status_code=404, detail=f"Etapa {stage_id} no encontrada")
 
     stage_code = str(stage_row.iloc[0]["stage_code"])
-    df = analytics.get_stage_result(stage_id)
+    df = analytics.get_stage_result(stage_id, event_id)
 
     entries = [
         StageTimeEntry(
@@ -67,9 +79,7 @@ def get_stage_times(stage_id: int) -> StageResult:
 
 
 def _isnan(val) -> bool:
-    """Comprueba si un valor es NaN de forma segura."""
     try:
-        import math
         return math.isnan(float(val))
     except (TypeError, ValueError):
         return val is None
