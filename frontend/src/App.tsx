@@ -2,7 +2,10 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { RallyProvider } from './context/RallyContext'
 import { Layout } from './components/Layout'
 import { Overview } from './pages/Overview'
-import { Stages, Evolution, Compare, Analysis } from './pages/Placeholders'
+import { Stages } from './pages/Stages'
+import { Evolution } from './pages/Evolution'
+import { Compare } from './pages/Compare'
+import { Analysis } from './pages/Analysis'
 
 export default function App() {
   return (
@@ -10,11 +13,11 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Layout />}>
-            <Route index element={<Overview />} />
-            <Route path="stages"    element={<Stages />} />
+            <Route index        element={<Overview />}   />
+            <Route path="stages"    element={<Stages />}    />
             <Route path="evolution" element={<Evolution />} />
-            <Route path="compare"   element={<Compare />} />
-            <Route path="analysis"  element={<Analysis />} />
+            <Route path="compare"   element={<Compare />}   />
+            <Route path="analysis"  element={<Analysis />}  />
           </Route>
         </Routes>
       </BrowserRouter>
