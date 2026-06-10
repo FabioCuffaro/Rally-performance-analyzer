@@ -25,12 +25,12 @@ data/raw/*.csv
 # eWRC cache (HTML cacheado localmente, no subir al repo)
 data/raw/ewrc/
 
-# Data processed -- los CSVs de mock SI se suben al repo para el deploy
-# Si quieres excluirlos, descomenta las siguientes lineas:
+# Data processed -- los CSVs se suben al repo para el deploy
+# Si quieres excluirlos, descomenta:
 # data/processed/*.csv
 # data/processed/*.parquet
 
-# Keep the .gitkeep placeholders
+# Keep gitkeep placeholders
 !data/raw/.gitkeep
 !data/processed/.gitkeep
 
@@ -44,18 +44,25 @@ data/raw/ewrc/
 .DS_Store
 Thumbs.db
 
-# Repomix output (herramienta de analisis de codigo, no subir al repo)
+# Repomix (herramienta de analisis, no subir)
 repomix-output.md
 repomix-output*.md
 
-# Documentacion interna del proyecto (uso personal, no subir al repo)
-# El README.md es el unico documento publico
+# Documentacion interna (uso personal, no subir al repo)
 docs/
+docs-bloque-*.md
 
 # Pytest
 .pytest_cache/
 .coverage
 htmlcov/
 
-# Streamlit secrets (contienen URLs y credenciales de produccion)
+# Streamlit secrets
 .streamlit/secrets.toml
+
+# Frontend — Node / build artifacts
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local
+frontend/.env.*.local
+frontend/*.tsbuildinfo
