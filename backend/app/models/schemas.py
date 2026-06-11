@@ -200,3 +200,63 @@ class MomentumEntry(BaseModel):
     avg_pos_first_half: float | None = None
     avg_pos_second_half: float | None = None
     momentum: float  # positivo = mejora, negativo = empeora
+
+# ── V3: Season schemas ────────────────────────────────────────────────────────
+
+class RallyPace(BaseModel):
+    """Pace medio de un piloto en un rally."""
+    event_id: int
+    event_name: str
+    avg_pace: float
+    stage_count: int
+
+
+class DriverSeasonPace(BaseModel):
+    """Evolucion de pace de un piloto a lo largo de la temporada."""
+    driver_name: str
+    manufacturer: str
+    paces: list[RallyPace]
+
+
+class SeasonStandingsEntry(BaseModel):
+    """Clasificacion de temporada de un piloto."""
+    driver_name: str
+    manufacturer: str
+    total_points: int
+    rally_points: dict[str, int]
+
+
+class SeasonStandings(BaseModel):
+    """Clasificacion completa de la temporada."""
+    entries: list[SeasonStandingsEntry]
+    event_ids: list[int]
+
+
+class SeasonSurfaceEntry(BaseModel):
+    """Pace de un piloto en una superficie a lo largo de la temporada."""
+    driver_name: str
+    manufacturer: str
+    surface: str
+    avg_pace: float
+    stage_count: int
+    rally_count: int
+
+
+class SeasonH2HResult(BaseModel):
+    """Resultado de un piloto en un rally del H2H."""
+    event_id: int
+    event_name: str
+    position_a: int | None = None
+    position_b: int | None = None
+    points_a: int
+    points_b: int
+    winner: str
+
+
+class SeasonH2H(BaseModel):
+    """Comparativa H2H entre dos pilotos en la temporada."""
+    driver_a: str
+    driver_b: str
+    results: list[SeasonH2HResult]
+    wins_a: int
+    wins_b: int

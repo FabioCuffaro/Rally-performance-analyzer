@@ -6,6 +6,7 @@ const NAV_ITEMS = [
   { to: '/evolution', label: 'Evolution',  icon: '📈' },
   { to: '/compare',   label: 'Compare',    icon: '⚔' },
   { to: '/analysis',  label: 'Analysis',   icon: '📊' },
+  { to: '/season',    label: 'Season',     icon: '🏆' },
 ]
 
 export function Sidebar() {
@@ -43,7 +44,7 @@ export function Sidebar() {
 
       {/* Footer */}
       <div className="border-t border-surface-border p-4 text-xs text-zinc-600">
-        WRC Data Dashboard v2.0
+        WRC Data Dashboard v3.0
       </div>
     </aside>
   )

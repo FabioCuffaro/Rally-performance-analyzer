@@ -175,3 +175,57 @@ export interface MomentumEntry {
   avg_pos_second_half: number | null
   momentum: number
 }
+
+// ── V3: Season types ─────────────────────────────────────────────────────────
+
+export interface RallyPace {
+  event_id: number
+  event_name: string
+  avg_pace: number
+  stage_count: number
+}
+
+export interface DriverSeasonPace {
+  driver_name: string
+  manufacturer: string
+  paces: RallyPace[]
+}
+
+export interface SeasonStandingsEntry {
+  driver_name: string
+  manufacturer: string
+  total_points: number
+  rally_points: Record<string, number>
+}
+
+export interface SeasonStandings {
+  entries: SeasonStandingsEntry[]
+  event_ids: number[]
+}
+
+export interface SeasonSurfaceEntry {
+  driver_name: string
+  manufacturer: string
+  surface: string
+  avg_pace: number
+  stage_count: number
+  rally_count: number
+}
+
+export interface SeasonH2HResult {
+  event_id: number
+  event_name: string
+  position_a: number | null
+  position_b: number | null
+  points_a: number
+  points_b: number
+  winner: string
+}
+
+export interface SeasonH2H {
+  driver_a: string
+  driver_b: string
+  results: SeasonH2HResult[]
+  wins_a: number
+  wins_b: number
+}

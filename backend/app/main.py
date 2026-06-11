@@ -3,12 +3,12 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.app.routers import rally, stages, drivers
+from backend.app.routers import rally, stages, drivers, season
 
 app = FastAPI(
     title="Rally Performance Analyzer",
     description="API para analizar datos del World Rally Championship.",
-    version="0.2.0",
+    version="0.3.0",
     docs_url="/docs",
     redoc_url="/redoc",
 )
@@ -25,9 +25,10 @@ app.add_middleware(
 app.include_router(rally.router)
 app.include_router(stages.router)
 app.include_router(drivers.router)
+app.include_router(season.router)
 
 
 @app.get("/health", tags=["Status"])
 def health_check() -> dict:
-    """Endpoint de salud — confirma que la API está en marcha."""
+    """Endpoint de salud — confirma que la API esta en marcha."""
     return {"status": "ok", "service": "rally-performance-analyzer"}

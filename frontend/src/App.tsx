@@ -6,6 +6,7 @@ import { Stages } from './pages/Stages'
 import { Evolution } from './pages/Evolution'
 import { Compare } from './pages/Compare'
 import { Analysis } from './pages/Analysis'
+import { Season } from './pages/Season'
 
 export default function App() {
   return (
@@ -13,11 +14,12 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Layout />}>
-            <Route index        element={<Overview />}   />
-            <Route path="stages"    element={<Stages />}    />
-            <Route path="evolution" element={<Evolution />} />
-            <Route path="compare"   element={<Compare />}   />
-            <Route path="analysis"  element={<Analysis />}  />
+            <Route index              element={<Overview />}   />
+            <Route path="stages"      element={<Stages />}     />
+            <Route path="evolution"   element={<Evolution />}  />
+            <Route path="compare"     element={<Compare />}    />
+            <Route path="analysis"    element={<Analysis />}   />
+            <Route path="season"      element={<Season />}     />
           </Route>
         </Routes>
       </BrowserRouter>
